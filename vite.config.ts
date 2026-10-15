@@ -10,6 +10,8 @@ const CONTENT_SECURITY_POLICY = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "connect-src 'none'",
+  // Only the click-to-play video tutorial, played by Google Drive's own player.
+  'frame-src https://drive.google.com',
   "worker-src 'none'",
   "object-src 'none'",
   "form-action 'none'",

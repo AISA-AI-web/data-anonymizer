@@ -3,6 +3,7 @@ import { AnonymizeFlow } from './components/AnonymizeFlow';
 import { Guide } from './components/Guide';
 import { LockIcon } from './components/Icons';
 import { ReidentifyFlow } from './components/ReidentifyFlow';
+import { VideoDialog } from './components/VideoTutorial';
 import { USER_GUIDE_URL } from './lib/policy';
 import type { KeyData } from './lib/types';
 
@@ -18,6 +19,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('anonymize');
   // The key lives only in memory; it disappears when the tab is closed or refreshed.
   const [sessionKey, setSessionKey] = useState<KeyData | null>(null);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   return (
     <>
@@ -29,6 +31,9 @@ export default function App() {
             <span className="privacy-pill">
               <LockIcon /> Runs in your browser · nothing is uploaded
             </span>
+            <button className="guide-link" onClick={() => setVideoOpen(true)}>
+              ▶ Video tutorial
+            </button>
             <a className="guide-link" href={USER_GUIDE_URL} target="_blank" rel="noopener">
               User guide (PDF)
             </a>
@@ -54,7 +59,11 @@ export default function App() {
       <main>
         {/* Kept mounted (hidden) so work in progress survives switching tabs. */}
         <div id="panel-anonymize" role="tabpanel" hidden={tab !== 'anonymize'}>
-          <AnonymizeFlow onKeyReady={setSessionKey} goToReidentify={() => setTab('reidentify')} />
+          <AnonymizeFlow
+            onKeyReady={setSessionKey}
+            goToReidentify={() => setTab('reidentify')}
+            openTutorial={() => setVideoOpen(true)}
+          />
         </div>
         <div id="panel-reidentify" role="tabpanel" hidden={tab !== 'reidentify'}>
           {tab === 'reidentify' && <ReidentifyFlow sessionKey={sessionKey} onKeyLoaded={setSessionKey} />}
@@ -63,6 +72,8 @@ export default function App() {
           {tab === 'guide' && <Guide />}
         </div>
       </main>
+
+      <VideoDialog open={videoOpen} onClose={() => setVideoOpen(false)} />
 
       <footer className="app-footer">
         <div className="app-footer__inner">

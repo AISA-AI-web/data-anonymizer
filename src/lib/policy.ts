@@ -21,6 +21,13 @@ export interface PolicySection {
 /** Step-by-step guide with screenshots, served from public/user-guide.pdf. */
 export const USER_GUIDE_URL = './user-guide.pdf';
 
+/** Video tutorial hosted on Google Drive (shared as "anyone with the link can view"). */
+export const TUTORIAL_VIDEO = {
+  title: 'Safely anonymizing student data for AI analysis',
+  embedUrl: 'https://drive.google.com/file/d/1NJ-rQtFkNzYq6U-obphonRq_R2neoWwj/preview',
+  viewUrl: 'https://drive.google.com/file/d/1NJ-rQtFkNzYq6U-obphonRq_R2neoWwj/view',
+};
+
 export const ADEK_DIGITAL_POLICY: PolicyLink = {
   title: 'ADEK School Digital Policy (v1.1, September 2024)',
   url: 'https://www.adek.gov.ae/-/media/Project/TAMM/ADEK/Policies/School-Policies/Health-safety-and-wellbeing/ADEK_S_Digital-Policy_EN.pdf',

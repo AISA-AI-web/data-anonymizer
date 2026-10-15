@@ -11,6 +11,7 @@ import {
 } from '../lib/policy';
 import type { Action, Category } from '../lib/types';
 import { Notice } from './Notice';
+import { VideoTutorial } from './VideoTutorial';
 
 const ACTION_TEXT: Record<Action, string> = {
   keep: 'Usually keep',
@@ -59,14 +60,22 @@ export function Guide() {
         </p>
       </div>
 
-      <Notice title="New to the tool?">
-        <p>
-          The user guide walks you through every step with screenshots.{' '}
-          <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
-            Open the user guide (PDF)
-          </a>
-        </p>
-      </Notice>
+      <div className="card tutorial-card">
+        <VideoTutorial />
+        <div>
+          <div className="eyebrow">New to the tool?</div>
+          <h3>Watch the video tutorial</h3>
+          <p className="small">
+            A short walkthrough of the whole round trip: anonymize, ask the AI, and put the names back.
+          </p>
+          <p className="small">
+            Prefer to read? The user guide covers every step with screenshots.{' '}
+            <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
+              Open the user guide (PDF)
+            </a>
+          </p>
+        </div>
+      </div>
 
       <div className="flow">
         <div>
@@ -104,6 +113,7 @@ export function Guide() {
             tracking.
           </li>
           <li>Nothing is stored after you close or refresh the tab, apart from the files you choose to download.</li>
+          <li>The video tutorial plays from Google Drive and only loads when you press play.</li>
         </ul>
       </div>
 

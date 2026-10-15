@@ -9,13 +9,14 @@ A web app that lets teachers use AI tools to analyse student spreadsheets **with
 
 Try it without real data: on the first screen, click **Try it with a made-up class list**.
 
-New users can open the step-by-step **[user guide (PDF)](public/user-guide.pdf)** from the **User guide (PDF)** button in the app's header. It uses only made-up student data.
+New users can watch the **Video tutorial** or open the step-by-step **[user guide (PDF)](public/user-guide.pdf)**, both from buttons in the app's header. The guide uses only made-up student data.
 
 ## Privacy model
 
 - **Nothing leaves the browser.** Files are read and processed locally in JavaScript. There is no server, database, analytics or tracking.
 - The built page has a Content Security Policy with `connect-src 'none'`, so the browser itself blocks the page from sending data anywhere, even if a bug or a dependency tried to.
 - Fonts are bundled with the app, so no requests go to Google Fonts or any other CDN.
+- The video tutorial is played by Google Drive's embedded player. It loads only when someone presses play, and the security policy allows frames from `drive.google.com` and nowhere else. The player is a separate, isolated page, so it cannot see anything in the app. The video's address is `TUTORIAL_VIDEO` in `src/lib/policy.ts`.
 - The key exists only in the tab's memory and in the file you download. If you set a passphrase, the key file is encrypted with AES-256-GCM using a key derived from the passphrase (PBKDF2-SHA-256, 600,000 iterations) through the browser's Web Crypto API.
 - Codes are assigned in random order, so `STU-001` does not reveal alphabetical or list position. Output file names are neutral, because original file names often contain a student's or class's name.
 

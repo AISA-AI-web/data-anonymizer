@@ -137,6 +137,12 @@ pre {
 .guide-link:hover {
   background: #cfa94f;
 }
+button.guide-link {
+  appearance: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
 .guide-link:focus-visible {
   outline: 3px solid var(--aisa-white);
   outline-offset: 2px;
@@ -709,5 +715,102 @@ pre.snippet {
   }
   .stepper li + li::before {
     display: none;
+  }
+}
+
+/* ---------- Video tutorial ---------- */
+.video__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--aisa-radius);
+  overflow: hidden;
+  background: var(--aisa-purple);
+}
+.video__frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.video__cover {
+  appearance: none;
+  border: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  font: inherit;
+  color: var(--aisa-white);
+  background: radial-gradient(circle at 30% 20%, #3a1a99 0%, var(--aisa-purple) 60%);
+  cursor: pointer;
+  text-align: center;
+}
+.video__play {
+  display: grid;
+  place-items: center;
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 50%;
+  background: var(--aisa-gold);
+  color: var(--aisa-purple);
+  padding-left: 0.25rem;
+  transition: transform 0.15s;
+}
+.video__cover:hover .video__play,
+.video__cover:focus-visible .video__play {
+  transform: scale(1.08);
+}
+.video__cover:focus-visible {
+  outline: 3px solid var(--aisa-gold);
+  outline-offset: -3px;
+}
+.video__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.video__note {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.video__links {
+  margin: 0.4rem 0 0;
+}
+.tutorial-card {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1.25rem;
+  align-items: center;
+}
+.video-dialog {
+  width: min(960px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  border: 0;
+  border-radius: var(--aisa-radius);
+  padding: 1rem 1.25rem 1.25rem;
+  box-shadow: 0 20px 60px rgba(23, 4, 80, 0.35);
+}
+.video-dialog::backdrop {
+  background: rgba(23, 4, 80, 0.6);
+}
+.video-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.video-dialog__head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+@media (max-width: 640px) {
+  .tutorial-card {
+    grid-template-columns: 1fr;
   }
 }

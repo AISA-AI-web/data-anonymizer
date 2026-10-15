@@ -5,7 +5,7 @@ import { suggestAll } from '../lib/detect';
 import { copyText, downloadFile } from '../lib/download';
 import { guessHeaderRow, readSpreadsheet, sheetToTable, tableToDelimited, tablesToXlsx } from '../lib/fileio';
 import { serializeKey } from '../lib/keyfile';
-import { aiPromptSnippet, ANONYMIZE_CHECKLIST, SUGGESTION_DISCLAIMER } from '../lib/policy';
+import { aiPromptSnippet, ANONYMIZE_CHECKLIST, SUGGESTION_DISCLAIMER, USER_GUIDE_URL } from '../lib/policy';
 import { combinationRisk, findLeftovers, QUASI_IDENTIFIERS } from '../lib/risk';
 import { SAMPLE_CSV, SAMPLE_FILE_NAME } from '../lib/sample';
 import type { ColumnPlan, KeyData, LoadedFile } from '../lib/types';
@@ -26,9 +26,10 @@ const FORMAT_LABELS = { csv: 'CSV (comma-separated text)', tsv: 'TSV (tab-separa
 interface Props {
   onKeyReady: (key: KeyData) => void;
   goToReidentify: () => void;
+  openTutorial: () => void;
 }
 
-export function AnonymizeFlow({ onKeyReady, goToReidentify }: Props) {
+export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Props) {
   const [step, setStep] = useState(0);
   const [loaded, setLoaded] = useState<LoadedFile | null>(null);
   const [busy, setBusy] = useState(false);
@@ -113,7 +114,15 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify }: Props) {
           />
           {!loaded && (
             <p className="small muted">
-              No file to hand?{' '}
+              New here?{' '}
+              <button className="link-btn" onClick={openTutorial}>
+                Watch the video tutorial
+              </button>{' '}
+              or{' '}
+              <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
+                read the user guide
+              </a>
+              . No file to hand?{' '}
               <button
                 className="link-btn"
                 onClick={() => load(SAMPLE_FILE_NAME, new TextEncoder().encode(SAMPLE_CSV).buffer as ArrayBuffer)}
