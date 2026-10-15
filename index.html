@@ -9,7 +9,33 @@
     <title>Student Data Anonymizer</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Replaced by the app as soon as it starts. Only becomes visible if the app fails to load. -->
+      <div class="boot-fallback">
+        <p><strong>Student Data Anonymizer</strong></p>
+        <p>The app has not loaded. Try refreshing the page.</p>
+        <p>
+          If this keeps happening, the site may have been published from its source code instead of the built app.
+          In the GitHub repository, open Settings &rarr; Pages and set Source to &ldquo;GitHub Actions&rdquo;.
+        </p>
+      </div>
+    </div>
+    <style>
+      .boot-fallback {
+        max-width: 40rem;
+        margin: 4rem auto;
+        padding: 0 1rem;
+        font-family: system-ui, sans-serif;
+        color: #1a1a1a;
+        opacity: 0;
+        animation: boot-show 0s linear 4s forwards;
+      }
+      @keyframes boot-show {
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
