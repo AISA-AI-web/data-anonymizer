@@ -1,0 +1,22 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local env (may hold private policy links)
+.env.local
+.env.*.local
+
+# NEVER commit policy documents or real student data to this public repo.
+*.pdf
+*.docx
+policies/
+private/
+sample-data/private/
+*.anonymizer-key.json
+*-key.json
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
