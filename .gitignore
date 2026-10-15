@@ -9,6 +9,7 @@ dist/
 
 # NEVER commit policy documents or real student data to this public repo.
 *.pdf
+!public/user-guide.pdf
 *.docx
 policies/
 private/

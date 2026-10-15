@@ -18,6 +18,9 @@ export interface PolicySection {
   summary: string;
 }
 
+/** Step-by-step guide with screenshots, served from public/user-guide.pdf. */
+export const USER_GUIDE_URL = './user-guide.pdf';
+
 export const ADEK_DIGITAL_POLICY: PolicyLink = {
   title: 'ADEK School Digital Policy (v1.1, September 2024)',
   url: 'https://www.adek.gov.ae/-/media/Project/TAMM/ADEK/Policies/School-Policies/Health-safety-and-wellbeing/ADEK_S_Digital-Policy_EN.pdf',

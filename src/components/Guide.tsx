@@ -7,6 +7,7 @@ import {
   DIGITAL_POLICY_SECTIONS,
   SUGGESTION_DISCLAIMER,
   UAE_PDPL,
+  USER_GUIDE_URL,
 } from '../lib/policy';
 import type { Action, Category } from '../lib/types';
 import { Notice } from './Notice';
@@ -57,6 +58,15 @@ export function Guide() {
           students for support, without the AI ever seeing who the students are.
         </p>
       </div>
+
+      <Notice title="New to the tool?">
+        <p>
+          The user guide walks you through every step with screenshots.{' '}
+          <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
+            Open the user guide (PDF)
+          </a>
+        </p>
+      </Notice>
 
       <div className="flow">
         <div>

@@ -125,6 +125,22 @@ pre {
 .privacy-pill svg {
   color: var(--aisa-gold);
 }
+.guide-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: var(--aisa-gold);
+  color: var(--aisa-purple);
+  text-decoration: none;
+}
+.guide-link:hover {
+  background: #cfa94f;
+}
+.guide-link:focus-visible {
+  outline: 3px solid var(--aisa-white);
+  outline-offset: 2px;
+}
 .app-tagline {
   color: rgba(255, 255, 255, 0.8);
   margin: 0.4rem 0 1rem;

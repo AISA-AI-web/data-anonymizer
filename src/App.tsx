@@ -3,6 +3,7 @@ import { AnonymizeFlow } from './components/AnonymizeFlow';
 import { Guide } from './components/Guide';
 import { LockIcon } from './components/Icons';
 import { ReidentifyFlow } from './components/ReidentifyFlow';
+import { USER_GUIDE_URL } from './lib/policy';
 import type { KeyData } from './lib/types';
 
 type Tab = 'anonymize' | 'reidentify' | 'guide';
@@ -28,6 +29,9 @@ export default function App() {
             <span className="privacy-pill">
               <LockIcon /> Runs in your browser · nothing is uploaded
             </span>
+            <a className="guide-link" href={USER_GUIDE_URL} target="_blank" rel="noopener">
+              User guide (PDF)
+            </a>
           </div>
           <p className="app-tagline">Prepare student data for AI safely, then match the AI’s results back to your students.</p>
           <nav className="tabs" role="tablist" aria-label="Sections">

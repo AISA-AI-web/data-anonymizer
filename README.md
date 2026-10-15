@@ -9,6 +9,8 @@ A web app that lets teachers use AI tools to analyse student spreadsheets **with
 
 Try it without real data: on the first screen, click **Try it with a made-up class list**.
 
+New users can open the step-by-step **[user guide (PDF)](public/user-guide.pdf)** from the **User guide (PDF)** button in the app's header. It uses only made-up student data.
+
 ## Privacy model
 
 - **Nothing leaves the browser.** Files are read and processed locally in JavaScript. There is no server, database, analytics or tracking.
