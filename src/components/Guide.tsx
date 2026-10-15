@@ -52,7 +52,7 @@ export function Guide() {
   return (
     <section className="stack" aria-labelledby="guide-heading">
       <div>
-        <div className="eyebrow">Guidance</div>
+        <div className="eyebrow">Help &amp; guidance</div>
         <h2 id="guide-heading">How this works, and the rules behind it</h2>
         <p className="lead">
           Use this tool when you want an AI tool to analyse student data, such as finding learning gaps or grouping

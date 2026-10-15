@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { copyText, downloadFile } from '../lib/download';
 import { isEncryptedKeyFile, parseKeyFile } from '../lib/keyfile';
-import { REIDENTIFY_REMINDERS } from '../lib/policy';
+import { REIDENTIFY_REMINDERS, USER_GUIDE_URL } from '../lib/policy';
 import {
   REIDENTIFY_ACCEPT,
   reidentifyFile,
@@ -18,13 +18,14 @@ import { Notice } from './Notice';
 interface Props {
   sessionKey: KeyData | null;
   onKeyLoaded: (key: KeyData) => void;
+  openTutorial: () => void;
 }
 
 type Result =
   | { kind: 'file'; file: ReidentifiedFile; stats: ReidentifyStats }
   | { kind: 'text'; text: string; stats: ReidentifyStats };
 
-export function ReidentifyFlow({ sessionKey, onKeyLoaded }: Props) {
+export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props) {
   const [key, setKey] = useState<KeyData | null>(sessionKey);
   const [lockedKey, setLockedKey] = useState<{ name: string; text: string } | null>(null);
   const [passphrase, setPassphrase] = useState('');
@@ -99,6 +100,17 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded }: Props) {
       <p className="lead">
         Put the real names and IDs back into what the AI gave you. This works with spreadsheets (CSV, Excel), text and
         Markdown files, or text you paste in.
+      </p>
+      <p className="small muted help-line">
+        First time?{' '}
+        <button className="link-btn" onClick={openTutorial}>
+          Watch the tutorial
+        </button>{' '}
+        or see “How to put the names back” in the{' '}
+        <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
+          user guide
+        </a>
+        .
       </p>
 
       <div className="stack">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import aisaSeal from '../assets/aisa-seal-white.png';
 import { TUTORIAL_VIDEO } from '../lib/policy';
 
 const PlayIcon = () => (
@@ -26,6 +27,7 @@ export function VideoTutorial({ autoLoad = false }: { autoLoad?: boolean }) {
           />
         ) : (
           <button className="video__cover" onClick={() => setLoaded(true)}>
+            <img className="video__seal" src={aisaSeal} alt="" width={52} height={52} />
             <span className="video__play">
               <PlayIcon />
             </span>

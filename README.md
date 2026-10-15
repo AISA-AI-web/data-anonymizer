@@ -39,7 +39,7 @@ To point staff to an internal policy, keep the document in access-controlled sto
    ```
 2. Re-run the **Deploy to GitHub Pages** workflow.
 
-The links appear on the **Guidance & policy** tab. The link text and URL are visible to anyone, but only signed-in staff can open the document. Use a neutral title.
+The links appear on the **Help & guidance** tab. The link text and URL are visible to anyone, but only signed-in staff can open the document. Use a neutral title.
 
 ## Deploying
 

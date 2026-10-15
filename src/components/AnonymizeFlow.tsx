@@ -5,7 +5,7 @@ import { suggestAll } from '../lib/detect';
 import { copyText, downloadFile } from '../lib/download';
 import { guessHeaderRow, readSpreadsheet, sheetToTable, tableToDelimited, tablesToXlsx } from '../lib/fileio';
 import { serializeKey } from '../lib/keyfile';
-import { aiPromptSnippet, ANONYMIZE_CHECKLIST, SUGGESTION_DISCLAIMER, USER_GUIDE_URL } from '../lib/policy';
+import { aiPromptSnippet, ANONYMIZE_CHECKLIST, SUGGESTION_DISCLAIMER } from '../lib/policy';
 import { combinationRisk, findLeftovers, QUASI_IDENTIFIERS } from '../lib/risk';
 import { SAMPLE_CSV, SAMPLE_FILE_NAME } from '../lib/sample';
 import type { ColumnPlan, KeyData, LoadedFile } from '../lib/types';
@@ -13,6 +13,7 @@ import { Checklist } from './Checklist';
 import { ColumnPlanner } from './ColumnPlanner';
 import { DataPreview } from './DataPreview';
 import { FileDrop } from './FileDrop';
+import { GettingStarted } from './GettingStarted';
 import { BackIcon, CopyIcon, DownloadIcon, KeyIcon, NextIcon } from './Icons';
 import { Notice } from './Notice';
 import { Stepper } from './Stepper';
@@ -106,32 +107,18 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
 
       {step === 0 && (
         <div className="stack">
+          {!loaded && (
+            <GettingStarted
+              onWatch={openTutorial}
+              onTrySample={() => load(SAMPLE_FILE_NAME, new TextEncoder().encode(SAMPLE_CSV).buffer as ArrayBuffer)}
+            />
+          )}
           <FileDrop
             accept={ACCEPT}
             title={busy ? 'Reading file…' : 'Drop a spreadsheet here, or click to choose one'}
             hint="CSV, TSV or Excel (.xlsx). The file is opened in this browser only and is never uploaded."
             onFile={async (file) => load(file.name, await file.arrayBuffer())}
           />
-          {!loaded && (
-            <p className="small muted">
-              New here?{' '}
-              <button className="link-btn" onClick={openTutorial}>
-                Watch the video tutorial
-              </button>{' '}
-              or{' '}
-              <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
-                read the user guide
-              </a>
-              . No file to hand?{' '}
-              <button
-                className="link-btn"
-                onClick={() => load(SAMPLE_FILE_NAME, new TextEncoder().encode(SAMPLE_CSV).buffer as ArrayBuffer)}
-              >
-                Try it with a made-up class list
-              </button>
-              .
-            </p>
-          )}
           {error && (
             <Notice tone="danger" title="That file could not be used">
               <p>{error}</p>

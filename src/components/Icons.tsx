@@ -61,3 +61,24 @@ export const NextIcon = ({ size = 16 }: IconProps) => (
     <path d="M9 18l6-6-6-6" />
   </svg>
 );
+
+export const PlayIcon = ({ size = 16 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M7 4.5v15l12.5-7.5z" fill="currentColor" />
+  </svg>
+);
+
+export const BookIcon = ({ size = 16 }: IconProps) => (
+  <svg {...base(size)}>
+    <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
+    <path d="M4 19V5" />
+    <path d="M8 7h7" />
+    <path d="M8 11h5" />
+  </svg>
+);
+
+export const SparkIcon = ({ size = 16 }: IconProps) => (
+  <svg {...base(size)}>
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
+  </svg>
+);
