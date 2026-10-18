@@ -27,6 +27,7 @@ export default function App() {
     <>
       <header className="app-header">
         <div className="app-header__inner">
+          <LanguageSwitch />
           <div className="app-header__top">
             <div className="brand">
               <img className="brand__seal" src={aisaSeal} alt={t.app.school} width={68} height={68} />
@@ -42,7 +43,6 @@ export default function App() {
               <a className="hdr-btn hdr-btn--outline" href={USER_GUIDE_URL} target="_blank" rel="noopener">
                 <BookIcon /> {t.app.userGuide}
               </a>
-              <LanguageSwitch />
             </div>
           </div>
           <div className="app-header__sub">

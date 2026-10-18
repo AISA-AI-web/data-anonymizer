@@ -13,7 +13,7 @@ New users can watch the **Video tutorial** or open the step-by-step **[user guid
 
 ## Languages
 
-The app is available in **English** and **Arabic**. Choose a language with the switch in the header; the whole interface changes, including the checklist, the guidance and the instructions to paste into the AI, and Arabic is laid out right to left. The choice is remembered in that browser. On a first visit the app follows the browser's language, so a browser set to Arabic opens in Arabic.
+The app is available in **English** and **Arabic**. Choose a language with the English | العربية toggle in the top-right corner of the header (it stays in that corner in both languages); the whole interface changes, including the checklist, the guidance and the instructions to paste into the AI, and Arabic is laid out right to left. The choice is remembered in that browser. On a first visit the app follows the browser's language, so a browser set to Arabic opens in Arabic.
 
 - The instructions for the AI are written in the chosen language, on the assumption that the conversation with the AI is too. They ask the AI to keep codes in English letters and digits, and codes the AI writes with Arabic-Indic digits (`STU-٠٠٤`) are still recognised when names are put back.
 - The video tutorial and the user guide PDF are in English only; the Arabic interface says so next to their links.

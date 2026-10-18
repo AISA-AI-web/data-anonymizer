@@ -41,7 +41,7 @@ export const en = {
     privacy: 'Runs in your browser · nothing is uploaded',
     watchTutorial: 'Watch the tutorial',
     userGuide: 'User guide (PDF)',
-    language: 'Language',
+    switchLanguage: 'Switch to Arabic',
     sections: 'Sections',
     tabs: { anonymize: '1. Anonymize', reidentify: '2. Re-identify results', guide: 'Help & guidance' },
     footer:

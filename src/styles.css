@@ -111,46 +111,76 @@ code {
   unicode-bidi: isolate;
 }
 
-/* ---------- Language switch ---------- */
-.lang-switch {
-  display: inline-flex;
+/* ---------- Language toggle ---------- */
+/* Pinned to the top-right corner of the header in every language (physical "right" on purpose, not "end"),
+   so it never jumps when the page mirrors. Its own contents are always left to right. */
+.app-header__lang {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  height: 68px;
+  display: flex;
   align-items: center;
-  gap: 0.15rem;
+}
+.app-header__top {
+  padding-right: calc(var(--lang-toggle-width) + 0.6rem);
+}
+.lang-toggle {
+  appearance: none;
+  display: flex;
+  width: var(--lang-toggle-width);
   padding: 0.2rem;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 999px;
-}
-.lang-switch > svg {
-  color: var(--aisa-gold);
-  margin-inline: 0.4rem 0.15rem;
-}
-.lang-switch__btn {
-  appearance: none;
-  border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
   font: inherit;
-  font-size: 0.88rem;
-  font-weight: 500;
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
   cursor: pointer;
 }
-.lang-switch__btn:lang(ar) {
+.lang-toggle:hover {
+  border-color: var(--aisa-white);
+  background: rgba(255, 255, 255, 0.06);
+}
+.lang-toggle:focus-visible {
+  outline: 3px solid var(--aisa-gold);
+  outline-offset: 2px;
+}
+.lang-toggle__track {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.lang-toggle__thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  border-radius: 999px;
+  background: var(--aisa-white);
+  transition: transform 0.2s ease;
+}
+.lang-toggle__label {
+  position: relative;
+  padding: 0.3rem 0;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.2s ease;
+}
+.lang-toggle__label:lang(ar) {
   font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
 }
-.lang-switch__btn:hover {
-  color: var(--aisa-white);
-  background: rgba(255, 255, 255, 0.1);
-}
-.lang-switch__btn[aria-pressed='true'] {
-  background: var(--aisa-white);
+.lang-toggle__label[data-active='true'] {
   color: var(--aisa-purple);
-  font-weight: 700;
 }
-.lang-switch__btn:focus-visible {
-  outline: 3px solid var(--aisa-gold);
-  outline-offset: 1px;
+@media (prefers-reduced-motion: reduce) {
+  .lang-toggle__thumb,
+  .lang-toggle__label {
+    transition: none;
+  }
 }
 
 /* ---------- Header ---------- */
@@ -159,6 +189,8 @@ code {
   color: var(--aisa-white);
 }
 .app-header__inner {
+  --lang-toggle-width: 9rem;
+  position: relative;
   max-width: 1120px;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 0;
@@ -929,6 +961,15 @@ pre.snippet {
   }
   .app-header__inner {
     padding: 1rem 1rem 0;
+  }
+  .app-header__lang {
+    position: static;
+    height: auto;
+    justify-content: flex-end;
+    margin-bottom: 0.6rem;
+  }
+  .app-header__top {
+    padding-right: 0;
   }
   .brand__seal {
     width: 52px;

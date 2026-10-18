@@ -81,7 +81,7 @@ export const ar: Messages = {
     privacy: 'تعمل داخل متصفحك · لا يُرفع أي شيء',
     watchTutorial: 'شاهد الفيديو التعليمي',
     userGuide: 'دليل المستخدم (PDF، بالإنجليزية)',
-    language: 'اللغة',
+    switchLanguage: 'التبديل إلى الإنجليزية',
     sections: 'الأقسام',
     tabs: { anonymize: '1. إخفاء الهوية', reidentify: '2. استعادة الأسماء في النتائج', guide: 'المساعدة والإرشادات' },
     footer:
