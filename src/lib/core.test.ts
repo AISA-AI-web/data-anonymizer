@@ -192,6 +192,13 @@ describe('re-identify', () => {
     expect(stats.restored.size).toBe(3);
   });
 
+  it('restores codes written with Arabic-Indic digits', () => {
+    const { text, stats } = reidentifyText('يحتاج STU-٠٠١ وSTU-۰۱۰ إلى دعم، أما STU-٩٩٩ فغير معروف.', key);
+    expect(text).toBe('يحتاج Ahmed Al Mansouri وLina Haddad إلى دعم، أما STU-٩٩٩ فغير معروف.');
+    expect(stats.replaced).toBe(2);
+    expect([...stats.unknown]).toEqual(['STU-٩٩٩']);
+  });
+
   it('leaves ordinary text alone and reports unknown codes', () => {
     const { text, stats } = reidentifyText('Stu 12 is in Grade 9. STU-999 was invented. STUDENT-001 too.', key);
     expect(text).toBe('Stu 12 is in Grade 9. STU-999 was invented. STUDENT-001 too.');

@@ -21,6 +21,8 @@
   --risk-low-border: #b7e0c8;
 
   --aisa-font: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  /* Tahoma supplies Arabic letters, which monospace fonts lack. */
+  --mono-font: ui-monospace, SFMono-Regular, Menlo, Consolas, Tahoma, monospace;
   --aisa-radius: 8px;
   --shadow: 0 1px 2px rgba(33, 7, 108, 0.06), 0 4px 16px rgba(33, 7, 108, 0.06);
 }
@@ -70,7 +72,7 @@ a {
 }
 code,
 pre {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono-font);
   font-size: 0.875rem;
 }
 
@@ -81,6 +83,74 @@ pre {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ---------- Arabic and right-to-left ---------- */
+/* Arabic follows the AISA bilingual style: Tahoma for Arabic letters (DM Sans has none), a taller line height,
+   and no letter-spacing or capitals, which break up joined Arabic script. */
+html[lang='ar'] {
+  --aisa-font: 'DM Sans', Tahoma, 'Segoe UI', Arial, sans-serif;
+}
+html[lang='ar'] body {
+  line-height: 1.7;
+}
+html[lang='ar'] .eyebrow,
+html[lang='ar'] .brand__school {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.82rem;
+}
+[dir='rtl'] .icon-flip {
+  transform: scaleX(-1);
+}
+/* Codes, markers and file names are always left-to-right, even inside Arabic sentences. */
+.token,
+.redacted,
+code {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ---------- Language switch ---------- */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+}
+.lang-switch > svg {
+  color: var(--aisa-gold);
+  margin-inline: 0.4rem 0.15rem;
+}
+.lang-switch__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.lang-switch__btn:lang(ar) {
+  font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
+}
+.lang-switch__btn:hover {
+  color: var(--aisa-white);
+  background: rgba(255, 255, 255, 0.1);
+}
+.lang-switch__btn[aria-pressed='true'] {
+  background: var(--aisa-white);
+  color: var(--aisa-purple);
+  font-weight: 700;
+}
+.lang-switch__btn:focus-visible {
+  outline: 3px solid var(--aisa-gold);
+  outline-offset: 1px;
 }
 
 /* ---------- Header ---------- */
@@ -103,7 +173,7 @@ pre {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  margin-right: auto;
+  margin-inline-end: auto;
 }
 .brand__seal {
   width: 68px;
@@ -125,6 +195,7 @@ pre {
 }
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
 }
@@ -294,7 +365,7 @@ main {
   width: 24px;
   height: 2px;
   background: var(--aisa-purple-border);
-  margin-right: 0.25rem;
+  margin-inline-end: 0.25rem;
 }
 .stepper .num {
   display: inline-grid;
@@ -455,7 +526,7 @@ textarea {
   border-radius: var(--aisa-radius);
   padding: 0.9rem 1rem;
   border: 1px solid var(--aisa-purple-border);
-  border-left: 4px solid var(--aisa-purple);
+  border-inline-start: 4px solid var(--aisa-purple);
   background: var(--aisa-purple-tint);
 }
 .notice > :last-child {
@@ -467,13 +538,13 @@ textarea {
   color: var(--aisa-purple);
 }
 .notice--gold {
-  border-left-color: var(--aisa-gold);
+  border-inline-start-color: var(--aisa-gold);
   background: #fbf7ec;
   border-color: #eadbb1;
 }
 .notice--danger {
   border-color: var(--risk-high-border);
-  border-left-color: var(--risk-high);
+  border-inline-start-color: var(--risk-high);
   background: var(--risk-high-bg);
 }
 .notice--danger .notice__title {
@@ -481,7 +552,7 @@ textarea {
 }
 .notice--warning {
   border-color: var(--risk-medium-border);
-  border-left-color: var(--risk-medium);
+  border-inline-start-color: var(--risk-medium);
   background: var(--risk-medium-bg);
 }
 .notice--warning .notice__title {
@@ -489,7 +560,7 @@ textarea {
 }
 .notice--success {
   border-color: var(--risk-low-border);
-  border-left-color: var(--risk-low);
+  border-inline-start-color: var(--risk-low);
   background: var(--risk-low-bg);
 }
 .notice--success .notice__title {
@@ -497,7 +568,7 @@ textarea {
 }
 .notice ul {
   margin: 0.25rem 0 0;
-  padding-left: 1.2rem;
+  padding-inline-start: 1.2rem;
 }
 
 /* ---------- Badges ---------- */
@@ -533,7 +604,7 @@ textarea {
   border-color: var(--aisa-purple-border);
 }
 .token {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono-font);
   font-size: 0.82rem;
   background: var(--aisa-purple-tint);
   color: var(--aisa-purple);
@@ -542,7 +613,7 @@ textarea {
   white-space: nowrap;
 }
 .redacted {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono-font);
   font-size: 0.82rem;
   background: #eee;
   color: #444;
@@ -563,7 +634,7 @@ table {
 }
 th,
 td {
-  text-align: left;
+  text-align: start;
   padding: 0.55rem 0.75rem;
   border-bottom: 1px solid #ece8f7;
   vertical-align: top;
@@ -618,7 +689,7 @@ tbody tr:last-child td {
 .columns-table input[type='text'] {
   width: 6.5rem;
   text-transform: uppercase;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono-font);
 }
 
 /* ---------- Stats ---------- */
@@ -678,6 +749,9 @@ tbody tr:last-child td {
 
 pre.snippet {
   white-space: pre-wrap;
+  /* Each line takes the direction of its own text, so Arabic lines and lines of codes both read correctly. */
+  unicode-bidi: plaintext;
+  text-align: start;
   background: var(--aisa-purple-tint);
   border: 1px solid var(--aisa-purple-border);
   border-radius: var(--aisa-radius);
@@ -758,7 +832,7 @@ pre.snippet {
 /* ---------- Start here ---------- */
 .start-here {
   border: 1px solid var(--aisa-purple-border);
-  border-left: 5px solid var(--aisa-gold);
+  border-inline-start: 5px solid var(--aisa-gold);
   border-radius: var(--aisa-radius);
   background: var(--aisa-purple-tint);
   padding: 1.1rem 1.25rem 1.25rem;
@@ -788,7 +862,7 @@ pre.snippet {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.3rem;
-  text-align: left;
+  text-align: start;
   font: inherit;
   color: var(--aisa-near-black);
   background: var(--aisa-white);
@@ -915,7 +989,7 @@ pre.snippet {
 .video__seal {
   position: absolute;
   top: 0.9rem;
-  left: 0.9rem;
+  inset-inline-start: 0.9rem;
   width: 52px;
   height: 52px;
   opacity: 0.95;
@@ -928,6 +1002,7 @@ pre.snippet {
   border-radius: 50%;
   background: var(--aisa-gold);
   color: var(--aisa-purple);
+  /* Optical centring for the play triangle, which is not mirrored in right-to-left languages. */
   padding-left: 0.25rem;
   transition: transform 0.15s;
 }

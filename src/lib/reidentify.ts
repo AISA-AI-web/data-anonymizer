@@ -17,9 +17,15 @@ function escapeRegExp(s: string): string {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// Arabic-Indic (٠–٩) and Persian (۰–۹) digits, which an AI answering in Arabic may use in place of 0–9.
+const DIGIT = '0-9\u0660-\u0669\u06F0-\u06F9';
+
+const westernDigits = (digits: string) =>
+  digits.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) & 0xf));
+
 /**
  * Creates a function that swaps codes such as STU-004 back to the original values.
- * It tolerates small changes AI tools make to codes: lower case, "STU_004", "STU 004", "STU004".
+ * It tolerates small changes AI tools make to codes: lower case, "STU_004", "STU 004", "STU004", "STU-٠٠٤".
  */
 export function createReidentifier(key: KeyData) {
   const lookup = new Map<string, string>();
@@ -37,13 +43,13 @@ export function createReidentifier(key: KeyData) {
     .sort((a, b) => b.length - a.length)
     .map(escapeRegExp)
     .join('|');
-  const re = new RegExp(`(?<![A-Za-z0-9])(${alternation})([ _\\-–]?)(\\d+)(?![0-9])`, 'gi');
+  const re = new RegExp(`(?<![A-Za-z0-9])(${alternation})([ _\\-–]?)([${DIGIT}]+)(?![${DIGIT}])`, 'gi');
 
   const replace = (text: string, encode: (s: string) => string = (s) => s): string =>
     text.replace(re, (match, prefix: string, separator: string, digits: string) => {
       // Without a dash/underscore, only accept full-width codes so "Age 12" or "Grade 9" are left alone.
       if ((separator === '' || separator === ' ') && digits.length < 3) return match;
-      const id = `${prefix.toUpperCase()}#${Number(digits)}`;
+      const id = `${prefix.toUpperCase()}#${Number(westernDigits(digits))}`;
       const original = lookup.get(id);
       if (original === undefined) {
         if (digits.length >= 3) stats.unknown.add(match);

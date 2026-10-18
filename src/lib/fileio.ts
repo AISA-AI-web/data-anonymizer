@@ -3,7 +3,24 @@ import Papa from 'papaparse';
 import { cellToString, isEmpty } from './cells';
 import type { Cell, LoadedFile, Sheet, SourceFormat, Table } from './types';
 
-export class UnsupportedFileError extends Error {}
+/** Why a file was rejected. The app shows a translated message for each code. */
+export type FileErrorCode =
+  | 'oldExcel'
+  | 'unsupportedSpreadsheet'
+  | 'notSpreadsheet'
+  | 'invalidXlsx'
+  | 'emptyWorkbook'
+  | 'emptyFile'
+  | 'tooLarge';
+
+export class UnsupportedFileError extends Error {
+  constructor(
+    readonly code: FileErrorCode,
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 const ZIP_MAGIC = [0x50, 0x4b, 0x03, 0x04];
 const OLE_MAGIC = [0xd0, 0xcf, 0x11, 0xe0];
@@ -20,22 +37,24 @@ export function sniffFormat(fileName: string, bytes: Uint8Array): SourceFormat {
   const ext = extensionOf(fileName);
   if (startsWith(bytes, OLE_MAGIC)) {
     throw new UnsupportedFileError(
+      'oldExcel',
       'This is an older Excel file (.xls). Open it in Excel and use File → Save As → Excel Workbook (.xlsx), then upload it again.',
     );
   }
   if (startsWith(bytes, ZIP_MAGIC)) {
     if (ext === 'ods' || ext === 'numbers') {
       throw new UnsupportedFileError(
+        'unsupportedSpreadsheet',
         'This spreadsheet format is not supported. Export it as .xlsx or .csv and upload that instead.',
       );
     }
     if (ext === 'docx' || ext === 'pptx') {
-      throw new UnsupportedFileError('This looks like a Word or PowerPoint file, not a spreadsheet.');
+      throw new UnsupportedFileError('notSpreadsheet', 'This looks like a Word or PowerPoint file, not a spreadsheet.');
     }
     return 'xlsx';
   }
   if (ext === 'xlsx' || ext === 'xlsm') {
-    throw new UnsupportedFileError('This file has an .xlsx name but is not a valid Excel workbook.');
+    throw new UnsupportedFileError('invalidXlsx', 'This file has an .xlsx name but is not a valid Excel workbook.');
   }
   if (ext === 'tsv' || ext === 'tab') return 'tsv';
   return 'csv';
@@ -108,12 +127,12 @@ export async function readSpreadsheet(fileName: string, buffer: ArrayBuffer): Pr
   const format = sniffFormat(fileName, bytes);
   if (format === 'xlsx') {
     const sheets = (await readXlsx(buffer)).map(trimSheet).filter((s) => s.grid.length > 0);
-    if (sheets.length === 0) throw new UnsupportedFileError('The workbook does not contain any data.');
+    if (sheets.length === 0) throw new UnsupportedFileError('emptyWorkbook', 'The workbook does not contain any data.');
     return { fileName, format, sheets };
   }
   const { grid, delimiter } = parseDelimited(decodeText(bytes), format === 'tsv' ? '\t' : undefined);
   const sheet = trimSheet({ name: baseName(fileName), grid });
-  if (sheet.grid.length === 0) throw new UnsupportedFileError('The file does not contain any data.');
+  if (sheet.grid.length === 0) throw new UnsupportedFileError('emptyFile', 'The file does not contain any data.');
   return { fileName, format: delimiter === '\t' ? 'tsv' : 'csv', sheets: [sheet], delimiter };
 }
 

@@ -50,14 +50,15 @@ export const CopyIcon = ({ size = 16 }: IconProps) => (
   </svg>
 );
 
+// Back and next arrows point the other way in right-to-left languages (see .icon-flip).
 export const BackIcon = ({ size = 16 }: IconProps) => (
-  <svg {...base(size)}>
+  <svg {...base(size)} className="icon-flip">
     <path d="M15 18l-6-6 6-6" />
   </svg>
 );
 
 export const NextIcon = ({ size = 16 }: IconProps) => (
-  <svg {...base(size)}>
+  <svg {...base(size)} className="icon-flip">
     <path d="M9 18l6-6-6-6" />
   </svg>
 );
@@ -80,5 +81,13 @@ export const BookIcon = ({ size = 16 }: IconProps) => (
 export const SparkIcon = ({ size = 16 }: IconProps) => (
   <svg {...base(size)}>
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
+  </svg>
+);
+
+export const GlobeIcon = ({ size = 16 }: IconProps) => (
+  <svg {...base(size)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" />
   </svg>
 );

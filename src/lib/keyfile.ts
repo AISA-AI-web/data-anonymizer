@@ -29,7 +29,14 @@ export class WrongPassphraseError extends Error {
   }
 }
 
-export class InvalidKeyFileError extends Error {}
+export class InvalidKeyFileError extends Error {
+  constructor(
+    readonly code: 'notJson' | 'notKeyFile',
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 function toBase64(bytes: Uint8Array): string {
   let binary = '';
@@ -84,7 +91,7 @@ export async function serializeKey(key: KeyData, passphrase?: string): Promise<s
 function assertKeyData(value: unknown): KeyData {
   const v = value as Partial<KeyData> | null;
   if (!v || v.app !== 'aisa-data-anonymizer' || typeof v.tokens !== 'object' || !Array.isArray(v.columns)) {
-    throw new InvalidKeyFileError('This is not a key file created by this tool.');
+    throw new InvalidKeyFileError('notKeyFile', 'This is not a key file created by this tool.');
   }
   return v as KeyData;
 }
@@ -102,13 +109,13 @@ export async function parseKeyFile(text: string, passphrase?: string): Promise<K
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new InvalidKeyFileError('This file is not a key file (it is not valid JSON).');
+    throw new InvalidKeyFileError('notJson', 'This file is not a key file (it is not valid JSON).');
   }
   const envelope = parsed as Partial<EncryptedKeyFile>;
   if (envelope?.encrypted !== true) return assertKeyData(parsed);
 
   if (envelope.app !== 'aisa-data-anonymizer' || !envelope.kdf || !envelope.cipher || !envelope.data) {
-    throw new InvalidKeyFileError('This is not a key file created by this tool.');
+    throw new InvalidKeyFileError('notKeyFile', 'This is not a key file created by this tool.');
   }
   if (!passphrase) throw new PassphraseRequiredError();
   const aesKey = await deriveKey(passphrase, fromBase64(envelope.kdf.salt), envelope.kdf.iterations);

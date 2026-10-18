@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import aisaSeal from '../assets/aisa-seal-white.png';
+import { useI18n } from '../i18n';
 import { TUTORIAL_VIDEO } from '../lib/policy';
 
 const PlayIcon = () => (
@@ -13,6 +14,7 @@ const PlayIcon = () => (
  * so opening the tool itself still makes no outside requests.
  */
 export function VideoTutorial({ autoLoad = false }: { autoLoad?: boolean }) {
+  const { t } = useI18n();
   const [loaded, setLoaded] = useState(autoLoad);
   return (
     <div className="video">
@@ -20,7 +22,7 @@ export function VideoTutorial({ autoLoad = false }: { autoLoad?: boolean }) {
         {loaded ? (
           <iframe
             src={TUTORIAL_VIDEO.embedUrl}
-            title={TUTORIAL_VIDEO.title}
+            title={t.video.title}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
@@ -31,17 +33,17 @@ export function VideoTutorial({ autoLoad = false }: { autoLoad?: boolean }) {
             <span className="video__play">
               <PlayIcon />
             </span>
-            <span className="video__title">{TUTORIAL_VIDEO.title}</span>
-            <span className="video__note">Plays from Google Drive. Nothing loads until you press play.</span>
+            <span className="video__title">{t.video.title}</span>
+            <span className="video__note">{t.video.note}</span>
           </button>
         )}
       </div>
       <p className="small muted video__links">
-        Video not playing?{' '}
-        <a href={TUTORIAL_VIDEO.viewUrl} target="_blank" rel="noopener noreferrer">
-          Open it in Google Drive
-        </a>
-        .
+        {t.video.notPlaying((text) => (
+          <a href={TUTORIAL_VIDEO.viewUrl} target="_blank" rel="noopener noreferrer">
+            {text}
+          </a>
+        ))}
       </p>
     </div>
   );
@@ -49,6 +51,7 @@ export function VideoTutorial({ autoLoad = false }: { autoLoad?: boolean }) {
 
 /** Opens the tutorial in a dialog over the page, so work in progress is not lost. */
 export function VideoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = dialog.current;
@@ -69,9 +72,9 @@ export function VideoDialog({ open, onClose }: { open: boolean; onClose: () => v
       }}
     >
       <div className="video-dialog__head">
-        <h2 id="video-dialog-title">Video tutorial</h2>
+        <h2 id="video-dialog-title">{t.video.dialogTitle}</h2>
         <button className="btn btn--secondary btn--small" onClick={onClose}>
-          Close
+          {t.video.close}
         </button>
       </div>
       {/* Unmounted when closed, which also stops playback. */}

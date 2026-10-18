@@ -45,14 +45,14 @@ export function combinationRisk(table: Table, columnIndexes: number[], threshold
 
 export interface LeftoverFinding {
   column: string;
-  kind: 'email' | 'phone' | 'Emirates ID';
+  kind: 'email' | 'phone' | 'emiratesId';
   count: number;
   example: string;
 }
 
 const LEFTOVER_CHECKS: [LeftoverFinding['kind'], RegExp][] = [
   ['email', EMAIL_RE],
-  ['Emirates ID', EMIRATES_ID_RE],
+  ['emiratesId', EMIRATES_ID_RE],
   ['phone', PHONE_RE],
 ];
 
