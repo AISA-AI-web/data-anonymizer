@@ -1,17 +1,19 @@
+import { useI18n, type Messages } from '../i18n';
 import { cellToString, isEmpty } from '../lib/cells';
 import type { Suggestion } from '../lib/detect';
 import type { Action, ColumnPlan, Table } from '../lib/types';
 
-const ACTION_LABELS: Record<Action, string> = {
-  keep: 'Keep as is',
-  pseudonymize: 'Replace with codes (reversible)',
-  remove: 'Remove column',
-  year: 'Keep year only',
-};
+const ACTIONS: Action[] = ['keep', 'pseudonymize', 'remove', 'year'];
 
-const RISK_LABELS = { high: 'High risk', medium: 'Check', low: 'Low risk' } as const;
+function reason(t: Messages, s: Suggestion): string {
+  const parts = [t.categories[s.category].reason];
+  if (s.empty) parts.unshift(t.columns.reasonEmpty);
+  if (s.basis === 'values') parts.unshift(t.columns.reasonFromValues);
+  if (s.notDates) parts.push(t.columns.reasonNotDates);
+  return parts.join(' ');
+}
 
-function samples(table: Table, index: number): string {
+function samples(table: Table, index: number, empty: string): string {
   const seen = new Set<string>();
   for (const row of table.rows) {
     const cell = row[index];
@@ -20,7 +22,7 @@ function samples(table: Table, index: number): string {
     seen.add(text.length > 28 ? text.slice(0, 27) + '…' : text);
     if (seen.size === 3) break;
   }
-  return seen.size ? [...seen].join(' · ') : '(empty)';
+  return seen.size ? [...seen].join(' · ') : empty;
 }
 
 interface Props {
@@ -31,6 +33,7 @@ interface Props {
 }
 
 export function ColumnPlanner({ table, suggestions, plans, onChange }: Props) {
+  const { t } = useI18n();
   const update = (index: number, patch: Partial<ColumnPlan>) =>
     onChange(plans.map((p) => (p.index === index ? { ...p, ...patch } : p)));
 
@@ -39,10 +42,10 @@ export function ColumnPlanner({ table, suggestions, plans, onChange }: Props) {
       <table className="columns-table">
         <thead>
           <tr>
-            <th>Column</th>
-            <th>What the tool thinks</th>
-            <th>What to do</th>
-            <th>Code prefix</th>
+            <th>{t.columns.column}</th>
+            <th>{t.columns.thinks}</th>
+            <th>{t.columns.todo}</th>
+            <th>{t.columns.prefix}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,27 +54,28 @@ export function ColumnPlanner({ table, suggestions, plans, onChange }: Props) {
             const changed = plan.action !== s.action;
             const canYear = s.dateLike || plan.action === 'year';
             const id = `col-${plan.index}`;
+            const sample = samples(table, plan.index, t.common.empty);
             return (
               <tr key={plan.index} className={changed ? 'changed' : undefined}>
                 <td>
-                  <div className="colname" id={`${id}-name`}>
+                  <div className="colname" id={`${id}-name`} dir="auto">
                     {plan.header}
                   </div>
-                  <div className="samples" title={samples(table, plan.index)}>
-                    {samples(table, plan.index)}
+                  <div className="samples" title={sample} dir="auto">
+                    {sample}
                   </div>
                 </td>
                 <td>
                   <div className="row" style={{ gap: '0.4rem' }}>
-                    <span className={`badge badge--${s.risk}`}>{RISK_LABELS[s.risk]}</span>
-                    <span className="badge badge--neutral">{s.label}</span>
+                    <span className={`badge badge--${s.risk}`}>{t.columns.risks[s.risk]}</span>
+                    <span className="badge badge--neutral">{t.categories[s.category].label}</span>
                   </div>
                   <div className="reason">
-                    {s.reason}
+                    {reason(t, s)}
                     {changed && (
                       <>
                         {' '}
-                        <strong>Suggested: {ACTION_LABELS[s.action].toLowerCase()}.</strong>
+                        <strong>{t.columns.suggested(s.action)}</strong>
                       </>
                     )}
                   </div>
@@ -82,21 +86,20 @@ export function ColumnPlanner({ table, suggestions, plans, onChange }: Props) {
                     value={plan.action}
                     onChange={(e) => update(plan.index, { action: e.target.value as Action })}
                   >
-                    {(Object.keys(ACTION_LABELS) as Action[])
-                      .filter((a) => a !== 'year' || canYear)
-                      .map((a) => (
-                        <option key={a} value={a}>
-                          {ACTION_LABELS[a]}
-                        </option>
-                      ))}
+                    {ACTIONS.filter((a) => a !== 'year' || canYear).map((a) => (
+                      <option key={a} value={a}>
+                        {t.columns.actions[a]}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td>
                   {plan.action === 'pseudonymize' ? (
                     <label className="field-inline">
-                      <span className="visually-hidden">Code prefix for {plan.header}</span>
+                      <span className="visually-hidden">{t.columns.prefixFor(plan.header)}</span>
                       <input
                         type="text"
+                        dir="ltr"
                         value={plan.prefix}
                         maxLength={8}
                         spellCheck={false}

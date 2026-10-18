@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { fileErrorText, keyErrorText, useI18n } from '../i18n';
 import { copyText, downloadFile } from '../lib/download';
 import { isEncryptedKeyFile, parseKeyFile } from '../lib/keyfile';
-import { REIDENTIFY_REMINDERS, USER_GUIDE_URL } from '../lib/policy';
+import { USER_GUIDE_URL } from '../lib/policy';
 import {
   REIDENTIFY_ACCEPT,
   reidentifyFile,
@@ -26,14 +27,16 @@ type Result =
   | { kind: 'text'; text: string; stats: ReidentifyStats };
 
 export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props) {
+  const { t } = useI18n();
   const [key, setKey] = useState<KeyData | null>(sessionKey);
   const [lockedKey, setLockedKey] = useState<{ name: string; text: string } | null>(null);
   const [passphrase, setPassphrase] = useState('');
-  const [keyError, setKeyError] = useState<string | null>(null);
+  // Errors are kept as they are, so their messages follow the chosen language.
+  const [keyError, setKeyError] = useState<unknown>(null);
   const [mode, setMode] = useState<'file' | 'paste'>('file');
   const [pasted, setPasted] = useState('');
   const [result, setResult] = useState<Result | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -50,7 +53,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
       setKey(k);
       onKeyLoaded(k);
     } catch (e) {
-      setKeyError(e instanceof Error ? e.message : 'That key file could not be read.');
+      setKeyError(e);
     }
   }
 
@@ -65,7 +68,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
       setLockedKey(null);
       setPassphrase('');
     } catch (e) {
-      setKeyError(e instanceof Error ? e.message : 'The key could not be unlocked.');
+      setKeyError(e);
     } finally {
       setBusy(false);
     }
@@ -79,7 +82,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
       const out = await reidentifyFile(file.name, await file.arrayBuffer(), key);
       setResult({ kind: 'file', file: out, stats: out.stats });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'That file could not be read.');
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -95,35 +98,41 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
 
   return (
     <section aria-labelledby="reid-heading">
-      <div className="eyebrow">Step 2 of the round trip</div>
-      <h2 id="reid-heading">Re-identify the AI’s results</h2>
-      <p className="lead">
-        Put the real names and IDs back into what the AI gave you. This works with spreadsheets (CSV, Excel), text and
-        Markdown files, or text you paste in.
-      </p>
+      <div className="eyebrow">{t.reidentify.eyebrow}</div>
+      <h2 id="reid-heading">{t.reidentify.heading}</h2>
+      <p className="lead">{t.reidentify.lead}</p>
       <p className="small muted help-line">
-        First time?{' '}
-        <button className="link-btn" onClick={openTutorial}>
-          Watch the tutorial
-        </button>{' '}
-        or see “How to put the names back” in the{' '}
-        <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
-          user guide
-        </a>
-        .
+        {t.reidentify.help(
+          (text) => (
+            <button className="link-btn" onClick={openTutorial}>
+              {text}
+            </button>
+          ),
+          (text) => (
+            <a href={USER_GUIDE_URL} target="_blank" rel="noopener">
+              {text}
+            </a>
+          ),
+        )}
       </p>
 
       <div className="stack">
         <div className="card stack">
           <h3>
-            <KeyIcon /> 1. Key
+            <KeyIcon /> {t.reidentify.keyHeading}
           </h3>
           {key ? (
             <div className="row">
-              <span className="badge badge--low">Key loaded</span>
+              <span className="badge badge--low">{t.reidentify.keyLoaded}</span>
               <span className="small">
-                {tokenCount.toLocaleString()} codes from <strong>{key.sourceFile}</strong>
-                {key.batch && <> · batch {key.batch}</>} · created {new Date(key.createdAt).toLocaleString()}
+                {t.reidentify.keySummary(
+                  tokenCount,
+                  <strong>
+                    <bdi>{key.sourceFile}</bdi>
+                  </strong>,
+                  key.batch,
+                  t.formatDateTime(key.createdAt),
+                )}
               </span>
               <span className="spacer" />
               <button
@@ -133,7 +142,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
                   setResult(null);
                 }}
               >
-                Use a different key file
+                {t.reidentify.otherKey}
               </button>
             </div>
           ) : lockedKey ? (
@@ -146,7 +155,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
               }}
             >
               <label className="field">
-                Passphrase for {lockedKey.name}
+                {t.reidentify.passphraseFor(lockedKey.name)}
                 <input
                   type="password"
                   value={passphrase}
@@ -156,29 +165,29 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
                 />
               </label>
               <button className="btn" type="submit" disabled={!passphrase || busy}>
-                {busy ? 'Unlocking…' : 'Unlock key'}
+                {busy ? t.reidentify.unlocking : t.reidentify.unlock}
               </button>
               <button type="button" className="link-btn small" onClick={() => setLockedKey(null)}>
-                Cancel
+                {t.reidentify.cancel}
               </button>
             </form>
           ) : (
             <FileDrop
               accept=".json"
-              title="Drop your key file here, or click to choose it"
-              hint="The PRIVATE-reidentification-key file you saved when you anonymized the data."
+              title={t.reidentify.keyDropTitle}
+              hint={t.reidentify.keyDropHint}
               onFile={loadKeyFile}
             />
           )}
-          {keyError && (
+          {keyError !== null && (
             <Notice tone="danger">
-              <p>{keyError}</p>
+              <p>{keyErrorText(t, keyError)}</p>
             </Notice>
           )}
         </div>
 
         <div className="card stack" aria-disabled={!key} style={key ? undefined : { opacity: 0.55 }}>
-          <h3>2. The AI’s results</h3>
+          <h3>{t.reidentify.resultsHeading}</h3>
           <div className="tabs" role="tablist" style={{ gap: '0.5rem' }}>
             <button
               className={`btn btn--small ${mode === 'file' ? '' : 'btn--secondary'}`}
@@ -186,7 +195,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
               aria-selected={mode === 'file'}
               onClick={() => setMode('file')}
             >
-              Upload a file
+              {t.reidentify.uploadFile}
             </button>
             <button
               className={`btn btn--small ${mode === 'paste' ? '' : 'btn--secondary'}`}
@@ -194,45 +203,47 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
               aria-selected={mode === 'paste'}
               onClick={() => setMode('paste')}
             >
-              Paste text
+              {t.reidentify.pasteText}
             </button>
           </div>
           {!key ? (
-            <p className="small muted">Load the key first.</p>
+            <p className="small muted">{t.reidentify.loadKeyFirst}</p>
           ) : mode === 'file' ? (
             <FileDrop
               accept={REIDENTIFY_ACCEPT}
-              title={busy ? 'Working…' : 'Drop the AI’s output file here'}
-              hint="CSV, TSV, Excel (.xlsx), .txt, .md, .json or .html"
+              title={busy ? t.reidentify.working : t.reidentify.resultsDropTitle}
+              hint={t.reidentify.resultsDropHint}
               onFile={processFile}
             />
           ) : (
             <div className="stack">
               <label className="field">
-                <span className="visually-hidden">AI response</span>
+                <span className="visually-hidden">{t.reidentify.pasteLabel}</span>
+                {/* The AI's answer may be in either language; while empty, the placeholder follows the page. */}
                 <textarea
+                  dir={pasted ? 'auto' : undefined}
                   value={pasted}
                   onChange={(e) => setPasted(e.target.value)}
-                  placeholder="Paste the AI’s answer here, e.g. “STU-004 and STU-017 need support with fractions…”"
+                  placeholder={t.reidentify.pastePlaceholder}
                 />
               </label>
               <div>
                 <button className="btn" onClick={processText} disabled={!pasted.trim()}>
-                  Put the names back
+                  {t.reidentify.putNamesBack}
                 </button>
               </div>
             </div>
           )}
-          {error && (
-            <Notice tone="danger" title="That file could not be used">
-              <p>{error}</p>
+          {error !== null && (
+            <Notice tone="danger" title={t.common.fileUnusable}>
+              <p>{fileErrorText(t, error)}</p>
             </Notice>
           )}
         </div>
 
         {result && (
           <div className="card stack">
-            <h3>3. Result</h3>
+            <h3>{t.reidentify.resultHeading}</h3>
             <ResultSummary stats={result.stats} />
             {result.kind === 'file' ? (
               <>
@@ -246,7 +257,7 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
                     className="btn"
                     onClick={() => downloadFile(result.file.data, result.file.fileName, result.file.mimeType)}
                   >
-                    <DownloadIcon /> Download {result.file.fileName}
+                    <DownloadIcon /> {t.reidentify.downloadFile(result.file.fileName)}
                   </button>
                 </div>
               </>
@@ -261,20 +272,20 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
                       setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    <CopyIcon /> {copied ? 'Copied' : 'Copy text'}
+                    <CopyIcon /> {copied ? t.common.copied : t.reidentify.copyText}
                   </button>
                   <button
                     className="btn btn--secondary"
                     onClick={() => downloadFile(result.text, 'ai-results-reidentified.txt', 'text/plain;charset=utf-8')}
                   >
-                    <DownloadIcon /> Download as .txt
+                    <DownloadIcon /> {t.reidentify.downloadTxt}
                   </button>
                 </div>
               </>
             )}
-            <Notice tone="gold" title="Before you act on these results">
+            <Notice tone="gold" title={t.reidentify.remindersTitle}>
               <ul>
-                {REIDENTIFY_REMINDERS.map((r) => (
+                {t.reidentify.reminders.map((r) => (
                   <li key={r}>{r}</li>
                 ))}
               </ul>
@@ -287,28 +298,22 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
 }
 
 function ResultSummary({ stats }: { stats: ReidentifyStats }) {
+  const { t } = useI18n();
   const unknown = [...stats.unknown];
   return (
     <div className="stack">
       {stats.replaced > 0 ? (
-        <Notice tone="success" title={`${stats.replaced.toLocaleString()} codes replaced`}>
-          <p>{stats.restored.size.toLocaleString()} different students/values were restored.</p>
+        <Notice tone="success" title={t.reidentify.replaced(stats.replaced)}>
+          <p>{t.reidentify.restored(stats.restored.size)}</p>
         </Notice>
       ) : (
-        <Notice tone="warning" title="No codes were found">
-          <p>
-            Check that you loaded the key that matches this data (the batch code on both file names should be the same)
-            and that the AI kept the codes in its answer.
-          </p>
+        <Notice tone="warning" title={t.reidentify.noCodesTitle}>
+          <p>{t.reidentify.noCodesText}</p>
         </Notice>
       )}
       {unknown.length > 0 && (
-        <Notice tone="warning" title="Some codes are not in the key">
-          <p>
-            {unknown.slice(0, 12).join(', ')}
-            {unknown.length > 12 && ` and ${unknown.length - 12} more`}. The AI may have changed or invented them, or they
-            come from a different batch. Treat any results attached to them with caution.
-          </p>
+        <Notice tone="warning" title={t.reidentify.unknownTitle}>
+          <p>{t.reidentify.unknown(unknown.slice(0, 12), Math.max(0, unknown.length - 12))}</p>
         </Notice>
       )}
     </div>

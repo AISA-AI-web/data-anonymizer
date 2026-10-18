@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n';
 import { cellToString } from '../lib/cells';
 import type { Table } from '../lib/types';
 
@@ -21,7 +22,9 @@ function renderCell(text: string, highlight: boolean) {
   );
 }
 
+/** Each cell gets its own direction (dir="auto"): the data can be in either language, whatever the interface is in. */
 export function DataPreview({ table, maxRows = 8, highlight = false }: { table: Table; maxRows?: number; highlight?: boolean }) {
+  const { t } = useI18n();
   const rows = table.rows.slice(0, maxRows);
   return (
     <div>
@@ -30,7 +33,9 @@ export function DataPreview({ table, maxRows = 8, highlight = false }: { table: 
           <thead>
             <tr>
               {table.headers.map((h) => (
-                <th key={h}>{h}</th>
+                <th key={h} dir="auto">
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
@@ -40,7 +45,7 @@ export function DataPreview({ table, maxRows = 8, highlight = false }: { table: 
                 {row.map((cell, c) => {
                   const text = cellToString(cell);
                   return (
-                    <td key={c} title={text}>
+                    <td key={c} title={text} dir="auto">
                       {renderCell(text, highlight)}
                     </td>
                   );
@@ -51,7 +56,7 @@ export function DataPreview({ table, maxRows = 8, highlight = false }: { table: 
         </table>
       </div>
       <p className="muted small" style={{ marginTop: '0.4rem' }}>
-        Showing {rows.length} of {table.rows.length} rows · {table.headers.length} columns
+        {t.common.showing(rows.length, table.rows.length, table.headers.length)}
       </p>
     </div>
   );

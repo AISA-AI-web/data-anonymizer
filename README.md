@@ -11,12 +11,21 @@ Try it without real data: on the first screen, click **Try it with a made-up cla
 
 New users can watch the **Video tutorial** or open the step-by-step **[user guide (PDF)](public/user-guide.pdf)**, both from buttons in the app's header. The guide uses only made-up student data.
 
+## Languages
+
+The app is available in **English** and **Arabic**. Choose a language with the switch in the header; the whole interface changes, including the checklist, the guidance and the instructions to paste into the AI, and Arabic is laid out right to left. The choice is remembered in that browser. On a first visit the app follows the browser's language, so a browser set to Arabic opens in Arabic.
+
+- The instructions for the AI are written in the chosen language, on the assumption that the conversation with the AI is too. They ask the AI to keep codes in English letters and digits, and codes the AI writes with Arabic-Indic digits (`STU-٠٠٤`) are still recognised when names are put back.
+- The video tutorial and the user guide PDF are in English only; the Arabic interface says so next to their links.
+- Your data, file names and the anonymized file are never translated.
+
 ## Privacy model
 
 - **Nothing leaves the browser.** Files are read and processed locally in JavaScript. There is no server, database, analytics or tracking.
 - The built page has a Content Security Policy with `connect-src 'none'`, so the browser itself blocks the page from sending data anywhere, even if a bug or a dependency tried to.
 - Fonts are bundled with the app, so no requests go to Google Fonts or any other CDN.
 - The video tutorial is played by Google Drive's embedded player. It loads only when someone presses play, and the security policy allows frames from `drive.google.com` and nowhere else. The player is a separate, isolated page, so it cannot see anything in the app. The video's address is `TUTORIAL_VIDEO` in `src/lib/policy.ts`.
+- The only thing saved in the browser is display settings (the chosen language, and whether the "Start here" panel is hidden).
 - The key exists only in the tab's memory and in the file you download. If you set a passphrase, the key file is encrypted with AES-256-GCM using a key derived from the passphrase (PBKDF2-SHA-256, 600,000 iterations) through the browser's Web Crypto API.
 - Codes are assigned in random order, so `STU-001` does not reveal alphabetical or list position. Output file names are neutral, because original file names often contain a student's or class's name.
 
@@ -24,7 +33,7 @@ This is **pseudonymization**, not full anonymization: whoever holds the key can 
 
 ## Policies, and keeping confidential documents private
 
-The guidance in the app (`src/lib/policy.ts`) is written in our own words and cites only **public** sources:
+The guidance in the app (`src/i18n/en.tsx` and its Arabic translation `src/i18n/ar.tsx`, with links in `src/lib/policy.ts`) is written in our own words and cites only **public** sources:
 
 - [ADEK School Digital Policy v1.1](https://www.adek.gov.ae/-/media/Project/TAMM/ADEK/Policies/School-Policies/Health-safety-and-wellbeing/ADEK_S_Digital-Policy_EN.pdf), mainly the definition of personal information and sections 4.1, 5.5, 6.1 and 7.1
 - [UAE Federal Decree-Law No. 45 of 2021 on the Protection of Personal Data (PDPL)](https://uaelegislation.gov.ae/en/legislations/1972)
@@ -84,8 +93,12 @@ src/
     reidentify.ts   Swap codes back (tolerates AI changes like "stu_004"); CSV/XLSX/TXT/MD/JSON/HTML
     keyfile.ts      Key file format and optional passphrase encryption
     risk.ts         Combination (re-identification) risk and leftover contact-detail checks
-    policy.ts       Checklist, guidance text and public policy references
+    policy.ts       Checklist structure and public policy links
     sample.ts       Made-up class list for demos
+  i18n/
+    en.tsx          English text: every message, the guidance and the AI instructions
+    ar.tsx          Arabic text (must have every message in en.tsx; the type checker and tests enforce it)
+    index.tsx       Language switch state, browser-language default, translated error messages
   components/       React UI
 ```
 

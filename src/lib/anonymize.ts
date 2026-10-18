@@ -83,24 +83,28 @@ const REDACTIONS: [RegExp, string][] = [
   [new RegExp(PHONE_RE.source, 'g'), '[PHONE]'],
 ];
 
-export function validatePlans(plans: ColumnPlan[]): string[] {
-  const errors: string[] = [];
+/** A problem with the chosen code prefixes. The app shows a translated message for each kind. */
+export type PlanError =
+  | { kind: 'invalidPrefix'; header: string }
+  | { kind: 'duplicatePrefix'; header: string; other: string; prefix: string };
+
+export function validatePlans(plans: ColumnPlan[]): PlanError[] {
+  const errors: PlanError[] = [];
   const seen = new Map<string, string>();
   for (const plan of plans) {
     if (plan.action !== 'pseudonymize') continue;
-    if (!PREFIX_RE.test(plan.prefix)) {
-      errors.push(`“${plan.header}”: the code prefix must be 2–8 capital letters or digits and start with a letter.`);
-    }
+    if (!PREFIX_RE.test(plan.prefix)) errors.push({ kind: 'invalidPrefix', header: plan.header });
     const other = seen.get(plan.prefix);
-    if (other) errors.push(`“${plan.header}” and “${other}” use the same code prefix (${plan.prefix}). Each column needs its own.`);
+    if (other) errors.push({ kind: 'duplicatePrefix', header: plan.header, other, prefix: plan.prefix });
     seen.set(plan.prefix, plan.header);
   }
   return errors;
 }
 
 export function anonymize(table: Table, plans: ColumnPlan[], options: AnonymizeOptions): AnonymizeResult {
-  const errors = validatePlans(plans);
-  if (errors.length > 0) throw new Error(errors.join('\n'));
+  if (validatePlans(plans).length > 0) {
+    throw new Error('Every code prefix must be 2–8 capital letters or digits, start with a letter, and be unique.');
+  }
 
   const stats: AnonymizeStats = {
     kept: 0,

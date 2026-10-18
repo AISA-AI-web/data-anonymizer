@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fileErrorText, useI18n } from '../i18n';
 import { anonymize, validatePlans, type AnonymizeResult } from '../lib/anonymize';
 import { cellToString } from '../lib/cells';
 import { suggestAll } from '../lib/detect';
 import { copyText, downloadFile } from '../lib/download';
-import { guessHeaderRow, readSpreadsheet, sheetToTable, tableToDelimited, tablesToXlsx } from '../lib/fileio';
+import {
+  guessHeaderRow,
+  readSpreadsheet,
+  sheetToTable,
+  tableToDelimited,
+  tablesToXlsx,
+  UnsupportedFileError,
+} from '../lib/fileio';
 import { serializeKey } from '../lib/keyfile';
-import { aiPromptSnippet, ANONYMIZE_CHECKLIST, SUGGESTION_DISCLAIMER } from '../lib/policy';
+import { ANONYMIZE_CHECKLIST } from '../lib/policy';
 import { combinationRisk, findLeftovers, QUASI_IDENTIFIERS } from '../lib/risk';
 import { SAMPLE_CSV, SAMPLE_FILE_NAME } from '../lib/sample';
-import type { ColumnPlan, KeyData, LoadedFile } from '../lib/types';
+import type { Category, ColumnPlan, KeyData, LoadedFile, Risk } from '../lib/types';
 import { Checklist } from './Checklist';
 import { ColumnPlanner } from './ColumnPlanner';
 import { DataPreview } from './DataPreview';
@@ -18,11 +26,8 @@ import { BackIcon, CopyIcon, DownloadIcon, KeyIcon, NextIcon } from './Icons';
 import { Notice } from './Notice';
 import { Stepper } from './Stepper';
 
-const STEPS = ['Upload', 'Choose columns', 'Review', 'Checklist & download'];
 const ACCEPT = '.csv,.tsv,.tab,.txt,.xlsx,.xlsm,.xls';
 const MAX_BYTES = 50 * 1024 * 1024;
-
-const FORMAT_LABELS = { csv: 'CSV (comma-separated text)', tsv: 'TSV (tab-separated text)', xlsx: 'Excel workbook (.xlsx)' };
 
 interface Props {
   onKeyReady: (key: KeyData) => void;
@@ -31,10 +36,12 @@ interface Props {
 }
 
 export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Props) {
+  const { t } = useI18n();
   const [step, setStep] = useState(0);
   const [loaded, setLoaded] = useState<LoadedFile | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Kept as the error itself, so its message follows the chosen language.
+  const [error, setError] = useState<unknown>(null);
   const [sheetIndex, setSheetIndex] = useState(0);
   const [headerRow, setHeaderRow] = useState(0);
   const [plans, setPlans] = useState<ColumnPlan[]>([]);
@@ -57,7 +64,9 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
     setError(null);
     setBusy(true);
     try {
-      if (buffer.byteLength > MAX_BYTES) throw new Error('This file is larger than 50 MB. Split it into smaller files first.');
+      if (buffer.byteLength > MAX_BYTES) {
+        throw new UnsupportedFileError('tooLarge', 'This file is larger than 50 MB. Split it into smaller files first.');
+      }
       const file = await readSpreadsheet(fileName, buffer);
       setLoaded(file);
       setSheetIndex(0);
@@ -65,7 +74,7 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
       setResult(null);
     } catch (e) {
       setLoaded(null);
-      setError(e instanceof Error ? e.message : 'The file could not be read.');
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -97,13 +106,10 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
 
   return (
     <section aria-labelledby="anon-heading">
-      <div className="eyebrow">Step 1 of the round trip</div>
-      <h2 id="anon-heading">Anonymize a spreadsheet</h2>
-      <p className="lead">
-        Replace student names and IDs with codes, remove what the AI does not need, and save a private key so you can
-        put the real names back into the AI’s results later.
-      </p>
-      <Stepper steps={STEPS} current={step} />
+      <div className="eyebrow">{t.anonymize.eyebrow}</div>
+      <h2 id="anon-heading">{t.anonymize.heading}</h2>
+      <p className="lead">{t.anonymize.lead}</p>
+      <Stepper steps={t.anonymize.steps} current={step} />
 
       {step === 0 && (
         <div className="stack">
@@ -115,28 +121,30 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
           )}
           <FileDrop
             accept={ACCEPT}
-            title={busy ? 'Reading file…' : 'Drop a spreadsheet here, or click to choose one'}
-            hint="CSV, TSV or Excel (.xlsx). The file is opened in this browser only and is never uploaded."
+            title={busy ? t.anonymize.reading : t.anonymize.dropTitle}
+            hint={t.anonymize.dropHint}
             onFile={async (file) => load(file.name, await file.arrayBuffer())}
           />
-          {error && (
-            <Notice tone="danger" title="That file could not be used">
-              <p>{error}</p>
+          {error !== null && (
+            <Notice tone="danger" title={t.common.fileUnusable}>
+              <p>{fileErrorText(t, error)}</p>
             </Notice>
           )}
           {loaded && table && (
             <div className="card stack">
               <div className="row">
                 <div>
-                  <div className="eyebrow">File</div>
-                  <strong>{loaded.fileName}</strong>
+                  <div className="eyebrow">{t.anonymize.file}</div>
+                  <strong>
+                    <bdi>{loaded.fileName}</bdi>
+                  </strong>
                 </div>
-                <span className="badge badge--neutral">Detected: {FORMAT_LABELS[loaded.format]}</span>
+                <span className="badge badge--neutral">{t.anonymize.detected(t.anonymize.formats[loaded.format])}</span>
               </div>
               <div className="row" style={{ alignItems: 'flex-end' }}>
                 {loaded.sheets.length > 1 && (
                   <label className="field">
-                    Sheet
+                    {t.anonymize.sheet}
                     <select
                       value={sheetIndex}
                       onChange={(e) => {
@@ -147,42 +155,40 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
                     >
                       {loaded.sheets.map((s, i) => (
                         <option key={i} value={i}>
-                          {s.name} ({s.grid.length} rows)
+                          {t.anonymize.sheetOption(s.name, s.grid.length)}
                         </option>
                       ))}
                     </select>
                   </label>
                 )}
                 <label className="field">
-                  Row with the column headings
+                  {t.anonymize.headerRow}
                   <select value={headerRow} onChange={(e) => setHeaderRow(Number(e.target.value))}>
                     {loaded.sheets[sheetIndex].grid.slice(0, 15).map((row, i) => (
                       <option key={i} value={i}>
-                        Row {i + 1}:{' '}
-                        {row
-                          .map(cellToString)
-                          .filter(Boolean)
-                          .slice(0, 4)
-                          .join(', ')
-                          .slice(0, 60) || '(empty)'}
+                        {t.anonymize.headerRowOption(
+                          i + 1,
+                          row
+                            .map(cellToString)
+                            .filter(Boolean)
+                            .slice(0, 4)
+                            .join(', ')
+                            .slice(0, 60) || t.common.empty,
+                        )}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
-              {loaded.sheets.length > 1 && (
-                <p className="small muted">
-                  Only the selected sheet is anonymized and included in the download. Other sheets are left out.
-                </p>
-              )}
+              {loaded.sheets.length > 1 && <p className="small muted">{t.anonymize.otherSheets}</p>}
               <DataPreview table={table} maxRows={5} />
               <div className="row">
                 <button className="btn btn--secondary" onClick={startOver}>
-                  Choose a different file
+                  {t.anonymize.chooseAnother}
                 </button>
                 <span className="spacer" />
                 <button className="btn" onClick={() => setStep(1)} disabled={table.headers.length === 0}>
-                  Next: choose columns <NextIcon />
+                  {t.anonymize.nextColumns} <NextIcon />
                 </button>
               </div>
             </div>
@@ -192,18 +198,21 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
 
       {step === 1 && table && (
         <div className="stack">
-          <Notice tone="gold" title="Suggestions, not decisions">
-            <p>{SUGGESTION_DISCLAIMER}</p>
+          <Notice tone="gold" title={t.anonymize.suggestionsTitle}>
+            <p>{t.guide.disclaimer}</p>
           </Notice>
           <div className="row">
             <span className="small muted">
-              {suggestions.filter((s) => s.risk === 'high').length} high-risk and{' '}
-              {suggestions.filter((s) => s.risk === 'medium').length} “check” columns found in {table.headers.length}{' '}
-              columns · {table.rows.length} rows
+              {t.anonymize.columnSummary(
+                suggestions.filter((s) => s.risk === 'high').length,
+                suggestions.filter((s) => s.risk === 'medium').length,
+                table.headers.length,
+                table.rows.length,
+              )}
             </span>
             <span className="spacer" />
             <button className="btn btn--secondary btn--small" onClick={() => setPlans(suggestedPlans)}>
-              Reset to suggestions
+              {t.anonymize.resetSuggestions}
             </button>
           </div>
           <ColumnPlanner table={table} suggestions={suggestions} plans={plans} onChange={setPlans} />
@@ -211,39 +220,36 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
             <label className="check">
               <input type="checkbox" checked={scrubMentions} onChange={(e) => setScrubMentions(e.target.checked)} />
               <span>
-                <strong>Also replace names and IDs found inside other columns</strong>
+                <strong>{t.anonymize.scrubTitle}</strong>
                 <br />
-                <span className="small muted">
-                  For example “Ahmed did well” becomes “STU-004 did well”. If several students share a first name, it
-                  becomes [NAME]. It can occasionally replace an ordinary word that is also a name.
-                </span>
+                <span className="small muted">{t.anonymize.scrubHelp}</span>
               </span>
             </label>
             <label className="check">
               <input type="checkbox" checked={redactPatterns} onChange={(e) => setRedactPatterns(e.target.checked)} />
               <span>
-                <strong>Hide email addresses, phone numbers and Emirates ID numbers found in kept columns</strong>
+                <strong>{t.anonymize.redactTitle}</strong>
                 <br />
-                <span className="small muted">They become [EMAIL], [PHONE] and [ID NUMBER]. These cannot be restored later.</span>
+                <span className="small muted">{t.anonymize.redactHelp}</span>
               </span>
             </label>
           </div>
           {planErrors.length > 0 && (
-            <Notice tone="danger" title="Fix these before continuing">
+            <Notice tone="danger" title={t.anonymize.fixFirst}>
               <ul>
-                {planErrors.map((e) => (
-                  <li key={e}>{e}</li>
+                {planErrors.map((e, i) => (
+                  <li key={i}>{t.anonymize.planError(e)}</li>
                 ))}
               </ul>
             </Notice>
           )}
           <div className="row">
             <button className="btn btn--secondary" onClick={() => setStep(0)}>
-              <BackIcon /> Back
+              <BackIcon /> {t.common.back}
             </button>
             <span className="spacer" />
             <button className="btn" onClick={goToReview} disabled={planErrors.length > 0}>
-              Next: review <NextIcon />
+              {t.anonymize.nextReview} <NextIcon />
             </button>
           </div>
         </div>
@@ -255,7 +261,6 @@ export function AnonymizeFlow({ onKeyReady, goToReidentify, openTutorial }: Prop
           plans={plans}
           categories={suggestions.map((s) => s.category)}
           risks={suggestions.map((s) => s.risk)}
-          labels={suggestions.map((s) => s.label)}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
         />
@@ -283,24 +288,23 @@ function Review({
   plans,
   categories,
   risks,
-  labels,
   onBack,
   onNext,
 }: {
   result: AnonymizeResult;
   plans: ColumnPlan[];
-  categories: string[];
-  risks: string[];
-  labels: string[];
+  categories: Category[];
+  risks: Risk[];
   onBack: () => void;
   onNext: () => void;
 }) {
+  const { t } = useI18n();
   const { stats, table } = result;
   const outputPlans = plans.filter((p) => p.action !== 'remove');
   const leftovers = useMemo(() => findLeftovers(table), [table]);
   const quasi = outputPlans
     .map((p, outIndex) => ({ p, outIndex }))
-    .filter(({ p }) => QUASI_IDENTIFIERS.includes(categories[p.index] as never))
+    .filter(({ p }) => QUASI_IDENTIFIERS.includes(categories[p.index]))
     .map(({ outIndex }) => outIndex);
   const combo = useMemo(() => combinationRisk(table, quasi), [table, quasi.join(',')]);
   const keptHighRisk = plans.filter((p) => p.action === 'keep' && risks[p.index] === 'high');
@@ -310,85 +314,80 @@ function Review({
   return (
     <div className="stack">
       <div className="stats">
-        <Stat n={table.rows.length} label="rows" />
-        <Stat n={stats.pseudonymized} label="columns replaced with codes" />
-        <Stat n={stats.tokens} label="codes created" />
-        <Stat n={stats.removed} label="columns removed" />
-        <Stat n={stats.generalized} label="dates reduced to year" />
-        <Stat n={stats.scrubbedMentions + stats.redactedPatterns} label="names/details hidden in text" />
+        <Stat n={table.rows.length} label={t.review.stats.rows} />
+        <Stat n={stats.pseudonymized} label={t.review.stats.pseudonymized} />
+        <Stat n={stats.tokens} label={t.review.stats.tokens} />
+        <Stat n={stats.removed} label={t.review.stats.removed} />
+        <Stat n={stats.generalized} label={t.review.stats.generalized} />
+        <Stat n={stats.scrubbedMentions + stats.redactedPatterns} label={t.review.stats.hidden} />
       </div>
 
       {nothingChanged && (
-        <Notice tone="danger" title="Nothing has been anonymized">
-          <p>Every column is set to “Keep as is”. Go back and choose what to replace or remove.</p>
+        <Notice tone="danger" title={t.review.nothingTitle}>
+          <p>{t.review.nothingText}</p>
         </Notice>
       )}
       {leftovers.length > 0 && (
-        <Notice tone="danger" title="Contact details or ID numbers are still in the data">
+        <Notice tone="danger" title={t.review.leftoversTitle}>
           <ul>
             {leftovers.map((l) => (
-              <li key={l.column + l.kind}>
-                “{l.column}”: {l.count} {l.kind}
-                {l.count === 1 ? '' : 's'} (e.g. {l.example})
-              </li>
+              <li key={l.column + l.kind}>{t.review.leftover(l)}</li>
             ))}
           </ul>
-          <p style={{ marginTop: '0.5rem' }}>Go back and remove these columns, or turn on “Hide email addresses…”.</p>
+          <p style={{ marginTop: '0.5rem' }}>{t.review.leftoversFix}</p>
         </Notice>
       )}
       {keptHighRisk.length > 0 && (
-        <Notice tone="warning" title="You are keeping high-risk columns">
+        <Notice tone="warning" title={t.review.keptHighRiskTitle}>
           <ul>
             {keptHighRisk.map((p) => (
               <li key={p.index}>
-                {p.header} ({labels[p.index]})
+                <bdi>{p.header}</bdi> ({t.categories[categories[p.index]].label})
               </li>
             ))}
           </ul>
-          <p style={{ marginTop: '0.5rem' }}>Only keep these if the analysis truly needs them and the sharing is approved.</p>
+          <p style={{ marginTop: '0.5rem' }}>{t.review.keptHighRiskText}</p>
         </Notice>
       )}
       {combo && combo.uniqueRows > 0 && (
-        <Notice tone="warning" title="Some students could still be singled out">
+        <Notice tone="warning" title={t.review.comboTitle}>
           <p>
-            {combo.uniqueRows} of {combo.totalRows} rows ({Math.round((combo.uniqueRows / combo.totalRows) * 100)}%)
-            are the only row with their combination of <strong>{combo.columns.join(' + ')}</strong>
-            {combo.smallGroupRows > combo.uniqueRows &&
-              `, and ${combo.smallGroupRows} rows are in groups smaller than ${combo.threshold}`}
-            . Someone who knows the class could work out who they are. Consider removing one of these columns or keeping
-            only what the analysis needs.
+            {t.review.combo(
+              combo.uniqueRows,
+              combo.totalRows,
+              <strong>
+                <bdi>{combo.columns.join(' + ')}</bdi>
+              </strong>,
+              combo.smallGroupRows,
+              combo.threshold,
+            )}
           </p>
         </Notice>
       )}
       {keptFreeText.length > 0 && (
-        <Notice tone="warning" title="Read the free-text columns yourself">
-          <p>
-            {keptFreeText.map((p) => `“${p.header}”`).join(', ')} may still mention people, places or events that
-            identify a student. The tool only catches names it knows about from this file.
-          </p>
+        <Notice tone="warning" title={t.review.freeTextTitle}>
+          <p>{t.review.freeText(keptFreeText.map((p) => p.header))}</p>
         </Notice>
       )}
       {stats.yearFailures > 0 && (
-        <Notice tone="warning" title="Some dates could not be read">
-          <p>{stats.yearFailures} values in “year only” columns had no recognisable year and were left blank.</p>
+        <Notice tone="warning" title={t.review.yearFailuresTitle}>
+          <p>{t.review.yearFailures(stats.yearFailures)}</p>
         </Notice>
       )}
 
       <div>
-        <h3>Preview of what will be shared</h3>
-        <p className="small muted">
-          Codes are highlighted. Check the column headings too: they are shared with the AI.
-        </p>
+        <h3>{t.review.previewHeading}</h3>
+        <p className="small muted">{t.review.previewHelp}</p>
         <DataPreview table={table} maxRows={10} highlight />
       </div>
 
       <div className="row">
         <button className="btn btn--secondary" onClick={onBack}>
-          <BackIcon /> Back to columns
+          <BackIcon /> {t.review.backColumns}
         </button>
         <span className="spacer" />
         <button className="btn" onClick={onNext} disabled={nothingChanged}>
-          Next: checklist <NextIcon />
+          {t.review.nextChecklist} <NextIcon />
         </button>
       </div>
     </div>
@@ -396,9 +395,10 @@ function Review({
 }
 
 function Stat({ n, label }: { n: number; label: string }) {
+  const { t } = useI18n();
   return (
     <div className="stat">
-      <div className="stat__number">{n.toLocaleString()}</div>
+      <div className="stat__number">{t.formatNumber(n)}</div>
       <div className="stat__label">{label}</div>
     </div>
   );
@@ -427,6 +427,7 @@ function Download({
   onStartOver: () => void;
   goToReidentify: () => void;
 }) {
+  const { t } = useI18n();
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [passphrase, setPassphrase] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -444,9 +445,9 @@ function Download({
   const allChecked = ANONYMIZE_CHECKLIST.every((i) => checked.has(i.id));
   const passphraseProblem =
     passphrase && passphrase.length < 8
-      ? 'Use at least 8 characters.'
+      ? t.download.passphraseShort
       : passphrase && passphrase !== confirm
-        ? 'The two passphrases do not match.'
+        ? t.download.passphraseMismatch
         : null;
 
   const toggle = (id: string) =>
@@ -485,7 +486,8 @@ function Download({
     }
   }
 
-  const prompt = aiPromptSnippet(
+  // In the chosen language, on the assumption that the conversation with the AI is too.
+  const prompt = t.aiPrompt(
     result.key.columns,
     plans.filter((p) => p.action === 'remove').map((p) => p.header),
   );
@@ -493,39 +495,33 @@ function Download({
   return (
     <div className="stack">
       <div className="card">
-        <h3>Before you share anything, confirm each point</h3>
-        <p className="small muted">
-          The downloads unlock once every box is ticked. The tool cannot check these for you, so this is where your
-          judgement counts.
-        </p>
+        <h3>{t.checklist.heading}</h3>
+        <p className="small muted">{t.checklist.help}</p>
         <Checklist items={ANONYMIZE_CHECKLIST} checked={checked} onToggle={toggle} />
       </div>
 
       <div className="grid-2">
         <div className="card stack">
           <div>
-            <div className="eyebrow">Keep private</div>
+            <div className="eyebrow">{t.download.keyEyebrow}</div>
             <h3>
-              <KeyIcon /> 1. Save the key file
+              <KeyIcon /> {t.download.keyHeading}
             </h3>
-            <p className="small">
-              The key links each code back to the real student. Without it you cannot put names back into the AI’s
-              results. <strong>Never upload it to an AI tool.</strong> Store it in school-approved storage.
-            </p>
+            <p className="small">{t.download.keyText((text) => <strong>{text}</strong>)}</p>
           </div>
           <label className="field">
-            Passphrase (recommended)
+            {t.download.passphrase}
             <input
               type="password"
               value={passphrase}
               autoComplete="new-password"
               onChange={(e) => setPassphrase(e.target.value)}
-              placeholder="Locks the key file"
+              placeholder={t.download.passphrasePlaceholder}
             />
           </label>
           {passphrase && (
             <label className="field">
-              Type the passphrase again
+              {t.download.passphraseAgain}
               <input
                 type="password"
                 value={confirm}
@@ -535,47 +531,42 @@ function Download({
             </label>
           )}
           {passphraseProblem && <p className="small" style={{ color: 'var(--risk-high)' }}>{passphraseProblem}</p>}
-          <p className="small muted">
-            If you forget the passphrase, the key cannot be opened. Nobody can recover it.
-          </p>
+          <p className="small muted">{t.download.passphraseWarning}</p>
           <div>
             <button
               className="btn btn--secondary"
               onClick={saveKey}
               disabled={!allChecked || !!passphraseProblem || working}
             >
-              <DownloadIcon /> Download key file
+              <DownloadIcon /> {t.download.downloadKey}
             </button>
-            {keySaved && <p className="small" style={{ marginTop: '0.5rem' }}>✓ Saved as {keyName}</p>}
+            {keySaved && <p className="small" style={{ marginTop: '0.5rem' }}>{t.download.savedAs(keyName)}</p>}
           </div>
         </div>
 
         <div className="card stack">
           <div>
-            <div className="eyebrow">Share with the AI</div>
-            <h3>2. Download the anonymized file</h3>
-            <p className="small">This is the only file to upload to your approved AI tool.</p>
+            <div className="eyebrow">{t.download.dataEyebrow}</div>
+            <h3>{t.download.dataHeading}</h3>
+            <p className="small">{t.download.dataText}</p>
           </div>
           <label className="field">
-            Format
+            {t.download.format}
             <select value={format} onChange={(e) => setFormat(e.target.value as 'csv' | 'xlsx')}>
-              <option value="csv">CSV (works with every AI tool)</option>
-              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="csv">{t.download.formatCsv}</option>
+              <option value="xlsx">{t.download.formatXlsx}</option>
             </select>
           </label>
-          <p className="small muted">
-            Saved as <code>{dataName}</code>. The name is neutral on purpose, because file names can identify students
-            too. Batch code {batch} links it to the matching key.
-          </p>
+          <p className="small muted">{t.download.dataName(<code>{dataName}</code>, batch)}</p>
           <div>
             <button className="btn" onClick={saveData} disabled={!allChecked || working}>
-              <DownloadIcon /> Download anonymized file
+              <DownloadIcon /> {t.download.downloadData}
             </button>
-            {dataSaved && <p className="small" style={{ marginTop: '0.5rem' }}>✓ Saved as {dataName}</p>}
+            {dataSaved && <p className="small" style={{ marginTop: '0.5rem' }}>{t.download.savedAs(dataName)}</p>}
           </div>
           {dataSaved && !keySaved && (
-            <Notice tone="warning" title="You have not saved the key yet">
-              <p>Without the key file you will not be able to put the names back after this page is closed.</p>
+            <Notice tone="warning" title={t.download.keyNotSavedTitle}>
+              <p>{t.download.keyNotSavedText}</p>
             </Notice>
           )}
         </div>
@@ -583,8 +574,8 @@ function Download({
 
       <div className="card stack">
         <div>
-          <h3>3. Paste these instructions into the AI with your file</h3>
-          <p className="small muted">They tell the AI to keep the codes intact so the results can be matched back.</p>
+          <h3>{t.download.promptHeading}</h3>
+          <p className="small muted">{t.download.promptHelp}</p>
         </div>
         <pre className="snippet">{prompt}</pre>
         <div className="row">
@@ -595,28 +586,25 @@ function Download({
               setTimeout(() => setCopied(false), 2000);
             }}
           >
-            <CopyIcon /> {copied ? 'Copied' : 'Copy instructions'}
+            <CopyIcon /> {copied ? t.common.copied : t.download.copyPrompt}
           </button>
         </div>
       </div>
 
-      <Notice title="When the AI has finished">
-        <p>
-          Download or copy the AI’s results, then use <strong>Re-identify results</strong> to swap the codes back to
-          real names. The key stays in this tab until you close or refresh it.
-        </p>
+      <Notice title={t.download.finishedTitle}>
+        <p>{t.download.finishedText((text) => <strong>{text}</strong>)}</p>
         <button className="btn btn--gold btn--small" onClick={goToReidentify}>
-          Go to Re-identify results <NextIcon />
+          {t.download.goReidentify} <NextIcon />
         </button>
       </Notice>
 
       <div className="row">
         <button className="btn btn--secondary" onClick={onBack}>
-          <BackIcon /> Back to review
+          <BackIcon /> {t.download.backReview}
         </button>
         <span className="spacer" />
         <button className="btn btn--secondary" onClick={onStartOver}>
-          Anonymize another file
+          {t.download.another}
         </button>
       </div>
     </div>
