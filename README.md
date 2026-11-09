@@ -9,6 +9,20 @@ A web app that lets teachers use AI tools to analyse student spreadsheets **with
 
 Try it without real data: on the first screen, click **Try it with a made-up class list**.
 
+### Anonymizing text
+
+On **1. Anonymize**, choose **Text** to anonymize a report, an email, notes or a student's writing instead of a spreadsheet:
+
+1. **Paste** the text (up to 200,000 characters). Email addresses, phone numbers and Emirates ID numbers can be hidden too.
+2. **Check the names.** A language model that runs in the browser reads the grammar of each sentence and marks the names it finds, each with its reason (after a title, from the words around it, recognised by the model, a common first name, or – shown amber, to check – a capitalised word mid-sentence). Click a marked word that is not a name; click any other capitalised word, or type a name, to hide it.
+3. **Lock & share.** Every person gets one code (`PERSON-001`; "Omar" and "Omar Al Hashimi" are the same person, and a first name two people share gets its own code). Save the key, locked with a passphrase, and copy the anonymized text with the instructions for the AI.
+
+To **unlock**, open **2. Re-identify / unlock**, load the key and its passphrase, and paste the anonymized text or the AI's answer. A short form of a name comes back as the full name it was linked to.
+
+The model is [compromise](https://github.com/spencermountain/compromise) (MIT licence): an English part-of-speech tagger with a lexicon of about 24,000 words and names, bundled with the app and loaded only when the Text screen first looks for names. `src/lib/names.ts` adds what it misses in a school in the UAE: Arabic, South Asian, African and East Asian first names, name particles (*bin*, *bint*, *Al-*), titles, family and class words ("my son …"), and words that are never names (subjects, places in the UAE, tools).
+
+New users can watch the **Video tutorial** or open the step-by-step **[user guide (PDF)](public/user-guide.pdf)**, both from buttons in the app's header. The guide uses only made-up student data.
+
 New users can watch the **Video tutorial** or open the step-by-step **[user guide (PDF)](public/user-guide.pdf)**, both from buttons in the app's header. The guide uses only made-up student data.
 
 ## Languages
@@ -90,6 +104,8 @@ src/
     fileio.ts       Read CSV/TSV/XLSX (auto-detects type, delimiter, encoding, header row); write CSV/XLSX
     detect.ts       Column classification from headings (English + Arabic) and value patterns
     anonymize.ts    Codes, removal, year-only dates, names inside comments, redaction of contact details
+    findNames.ts    Names in free text: the compromise language model plus the rules in names.ts
+    anonymizeText.ts  Text → PERSON/EMAIL/PHONE/IDNUM codes and the key
     reidentify.ts   Swap codes back (tolerates AI changes like "stu_004"); CSV/XLSX/TXT/MD/JSON/HTML
     keyfile.ts      Key file format and optional passphrase encryption
     risk.ts         Combination (re-identification) risk and leftover contact-detail checks
@@ -106,5 +122,6 @@ src/
 
 - Suggestions are automated and can be wrong or incomplete. Human judgement decides what is shared.
 - Names inside free text are caught only if they appear in a column you replace with codes. Nicknames, misspellings, siblings, staff and places are not caught.
+- In pasted text, names are found by an English language model and rules, not by knowing who is in the class: names in lower case or in Arabic script, nicknames and unusual spellings can be missed, and an ordinary capitalised word can be taken for a name. The Check screen is there to correct both.
 - Hidden rows and columns are included like any others. Excel formatting, formulas, cell comments and other sheets are not carried over (values only). Old `.xls` files must be saved as `.xlsx` first.
 - AI tools sometimes change or invent codes. Unknown codes are flagged on the results screen.

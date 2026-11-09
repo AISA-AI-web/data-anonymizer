@@ -24,3 +24,17 @@ Ethan Brooks,1048228,2014-03-03,M,UK,6,C,brooks.family@example.com,050 555 0116,
 Reem Barakat,1048229,2014-08-30,F,Lebanon,6,C,barakat.r@example.com,056 555 0117,784-2014-1919191-9,,None,Below,61,87,Reem would benefit from more reading practice at home.
 Khalid Al Dhaheri,1048230,2014-01-17,M,UAE,6,C,dhaheri.k@example.com,050 555 0118,784-2014-2020202-0,,None,On track,77,94,Khalid is a strong team player.
 `;
+
+/** A made-up note for trying the text anonymizer. Every name and contact detail here is fictional. */
+export const SAMPLE_TEXT = `Dear Ms Rahman,
+
+I wanted to share how the Grade 6 reading groups went this week. Omar Al Hashimi has made real progress: he finished his book and helped Hessa with her summary. Hessa bint Saeed is still finding inference questions hard, and her mother, Mrs. Layla Haddad, asked if we could send extra practice home (layla.h@example.com, 050 555 0199).
+
+Arjun and Priya Nair worked well together on the poster. Will Grace Lee join their group next week? Omar's presentation on Friday is the one to watch.
+
+Notes for next week
+Daniel: needs a quieter seat during reading.
+Arjun: ready for the harder texts.
+
+Thanks,
+Mr. Collins`;

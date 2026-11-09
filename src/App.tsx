@@ -3,9 +3,10 @@ import aisaLogo from './assets/aisa-logo.png';
 import aisaSeal from './assets/aisa-seal-white.png';
 import { AnonymizeFlow } from './components/AnonymizeFlow';
 import { Guide } from './components/Guide';
-import { BookIcon, LockIcon, PlayIcon } from './components/Icons';
+import { BookIcon, LockIcon, PlayIcon, SheetIcon, TextIcon } from './components/Icons';
 import { LanguageSwitch } from './components/LanguageSwitch';
 import { ReidentifyFlow } from './components/ReidentifyFlow';
+import { TextAnonymizeFlow } from './components/TextAnonymizeFlow';
 import { VideoDialog } from './components/VideoTutorial';
 import { useI18n } from './i18n';
 import { USER_GUIDE_URL } from './lib/policy';
@@ -18,6 +19,7 @@ const TABS: Tab[] = ['anonymize', 'reidentify', 'guide'];
 export default function App() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('anonymize');
+  const [source, setSource] = useState<'sheet' | 'text'>('sheet');
   // The key lives only in memory; it disappears when the tab is closed or refreshed.
   const [sessionKey, setSessionKey] = useState<KeyData | null>(null);
   const [videoOpen, setVideoOpen] = useState(false);
@@ -71,11 +73,26 @@ export default function App() {
       <main>
         {/* Kept mounted (hidden) so work in progress survives switching tabs. */}
         <div id="panel-anonymize" role="tabpanel" hidden={tab !== 'anonymize'}>
-          <AnonymizeFlow
-            onKeyReady={setSessionKey}
-            goToReidentify={() => setTab('reidentify')}
-            openTutorial={openTutorial}
-          />
+          <div className="source-switch" role="group" aria-label={t.source.label}>
+            <span className="source-switch__label">{t.source.label}</span>
+            <button className="source-switch__btn" aria-pressed={source === 'sheet'} onClick={() => setSource('sheet')}>
+              <SheetIcon /> {t.source.sheet}
+            </button>
+            <button className="source-switch__btn" aria-pressed={source === 'text'} onClick={() => setSource('text')}>
+              <TextIcon /> {t.source.text}
+            </button>
+          </div>
+          {/* Both kept mounted (hidden) so switching does not lose work in progress. */}
+          <div hidden={source !== 'sheet'}>
+            <AnonymizeFlow
+              onKeyReady={setSessionKey}
+              goToReidentify={() => setTab('reidentify')}
+              openTutorial={openTutorial}
+            />
+          </div>
+          <div hidden={source !== 'text'}>
+            <TextAnonymizeFlow onKeyReady={setSessionKey} goToReidentify={() => setTab('reidentify')} />
+          </div>
         </div>
         <div id="panel-reidentify" role="tabpanel" hidden={tab !== 'reidentify'}>
           {tab === 'reidentify' && (

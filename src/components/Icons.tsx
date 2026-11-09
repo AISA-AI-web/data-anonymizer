@@ -83,3 +83,16 @@ export const SparkIcon = ({ size = 16 }: IconProps) => (
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
   </svg>
 );
+
+export const SheetIcon = ({ size = 18 }: IconProps) => (
+  <svg {...base(size)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M3 10h18M3 15h18M9 4v16" />
+  </svg>
+);
+
+export const TextIcon = ({ size = 18 }: IconProps) => (
+  <svg {...base(size)}>
+    <path d="M4 6h16M4 10h16M4 14h11M4 18h8" />
+  </svg>
+);
