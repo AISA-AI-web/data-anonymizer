@@ -36,7 +36,16 @@ describe('translations', () => {
     expect(prompt).not.toMatch(/[‎‏⁦-⁩]/);
   });
 
-  it('count Arabic nouns with the right form for each number', () => {
+  it('write the text instructions for the AI in both languages, with the codes intact and no hidden characters', () => {
+    for (const messages of [en, ar]) {
+      const prompt = messages.aiTextPrompt(['PERSON', 'EMAIL']);
+      expect(prompt).toContain('PERSON-001');
+      expect(prompt).toContain('EMAIL-001');
+      expect(prompt).not.toMatch(/[\u200e\u200f\u2066-\u2069]/);
+    }
+  });
+
+    it('count Arabic nouns with the right form for each number', () => {
     const rows = (n: number) => ar.anonymize.sheetOption('Sheet1', n).replace(/[⁦-⁩]/g, '');
     expect(rows(1)).toBe('Sheet1 (صف واحد)');
     expect(rows(2)).toBe('Sheet1 (صفّان)');

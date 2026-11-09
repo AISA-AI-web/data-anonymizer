@@ -33,7 +33,8 @@ export function ReidentifyFlow({ sessionKey, onKeyLoaded, openTutorial }: Props)
   const [passphrase, setPassphrase] = useState('');
   // Errors are kept as they are, so their messages follow the chosen language.
   const [keyError, setKeyError] = useState<unknown>(null);
-  const [mode, setMode] = useState<'file' | 'paste'>('file');
+  // Text anonymized on the Text screen comes back as pasted text.
+  const [mode, setMode] = useState<'file' | 'paste'>(sessionKey?.sourceFile === 'Pasted text' ? 'paste' : 'file');
   const [pasted, setPasted] = useState('');
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<unknown>(null);

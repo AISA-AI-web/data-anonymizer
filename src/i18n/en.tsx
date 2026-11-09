@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import type { PlanError } from '../lib/anonymize';
 import type { FileErrorCode } from '../lib/fileio';
+import type { NameReason } from '../lib/findNames';
 import type { ChecklistGroup, ChecklistId } from '../lib/policy';
 import type { LeftoverFinding } from '../lib/risk';
 import type { Action, Category, Risk, SourceFormat } from '../lib/types';
@@ -37,13 +38,13 @@ export const en = {
   app: {
     title: 'Student Data Anonymizer',
     school: 'American International School in Abu Dhabi',
-    tagline: 'Prepare student data for AI safely, then match the AI’s results back to your students.',
+    tagline: 'Prepare student data or text for AI safely, then match the AI’s results back to your students.',
     privacy: 'Runs in your browser · nothing is uploaded',
     watchTutorial: 'Watch the tutorial',
     userGuide: 'User guide (PDF)',
     switchLanguage: 'Switch to Arabic',
     sections: 'Sections',
-    tabs: { anonymize: '1. Anonymize', reidentify: '2. Re-identify results', guide: 'Help & guidance' },
+    tabs: { anonymize: '1. Anonymize', reidentify: '2. Re-identify / unlock', guide: 'Help & guidance' },
     footer:
       'This tool supports, and does not replace, your professional judgement and your school’s data protection and AI policies. Suggestions can be wrong; always check the data yourself before sharing it.',
     videoTutorial: 'Video tutorial',
@@ -70,6 +71,12 @@ export const en = {
     tooLarge: 'This file is larger than 50 MB. Split it into smaller files first.',
     unreadable: 'The file could not be read.',
   } satisfies Record<FileErrorCode | 'unreadable', string>,
+
+  source: {
+    label: 'What do you want to anonymize?',
+    sheet: 'A spreadsheet',
+    text: 'Text',
+  },
 
   anonymize: {
     eyebrow: 'Step 1 of the round trip',
@@ -304,6 +311,13 @@ export const en = {
       key: 'I will keep the key file private and never upload it to an AI tool.',
       oversight: 'A person, not the AI, will review the results and make any decisions about students.',
       retention: 'I will delete the anonymized file, the AI output and the key when they are no longer needed.',
+      'text-names':
+        'I have read the anonymized text, and every person is hidden, including nicknames, misspellings and names written in lower case or in Arabic script.',
+      'text-details':
+        'Nothing else in the text identifies someone: a home address, a unique event, or a detail only one student has (for example, the only student of a nationality in a class).',
+      'text-sensitive':
+        'Sensitive information is left out (health, learning-support/SEN, religion, safeguarding, counselling or behaviour records), unless it is essential and sharing it is approved.',
+      'text-retention': 'I will delete the anonymized text, the AI output and the key when they are no longer needed.',
     } satisfies Record<ChecklistId, string>,
   },
 
@@ -372,10 +386,112 @@ export const en = {
     return lines.join('\n');
   },
 
+  /** The Text screen: names found in pasted text, replaced with codes and locked in a key. */
+  text: {
+    eyebrow: 'Step 1 of the round trip',
+    heading: 'Anonymize text',
+    lead: 'Paste a report, an email, notes or a student’s writing. The tool finds the people’s names and swaps each one for a code, and locks the codes in a key so you can unlock the text, or the AI’s answer, later.',
+    steps: ['Paste text', 'Check the names', 'Lock & share'],
+    textLabel: 'Text to anonymize',
+    placeholder: 'Paste the text here, e.g. “Omar Al Hashimi has made real progress in reading…”',
+    characters: (n: number) => `${count(n, 'character', 'characters')} · stays in this browser and is never uploaded`,
+    sample: 'Try it with a made-up note',
+    contactsTitle: 'Also hide email addresses, phone numbers and Emirates ID numbers',
+    contactsHelp: 'They become codes too (EMAIL-001, PHONE-001…), and the key brings them back.',
+    tooLongTitle: 'This text is too long',
+    tooLong: (max: number) => `Paste up to ${num(max)} characters at a time, or split it into parts.`,
+    errorTitle: 'The text could not be read',
+    error: 'The text could not be read.',
+    reading: 'Reading the text…',
+    find: 'Find the names',
+
+    checkTitle: 'Check every name: the tool can miss some',
+    checkText:
+      'The names were found by a language model that reads the grammar of each sentence, with extra rules for names, titles and places in our school. It runs in this browser and reads English text. It can still miss a name (a nickname, a misspelling, a name in lower case or in Arabic script) or take an ordinary word for one. Read the text below and correct it.',
+    yourText: 'Your text',
+    legendHidden: 'Hidden',
+    legendCheck: 'Check',
+    legendNotHidden: 'Not hidden',
+    clickHelp: (not: (text: string) => ReactNode): ReactNode => (
+      <>Click a highlighted name if it is {not('not')} a name. Click any other capitalised word to hide it.</>
+    ),
+    hideWord: (word: string) => `Hide “${word}” as a name`,
+    hiddenAs: (token: string, source?: string) =>
+      `Hidden as ${token}${source ? ` (${source})` : ''}. Click if this is not a name.`,
+    contactHiddenAs: (token: string) => `Hidden as ${token}`,
+    namesHeading: (n: number) => `Names to hide (${num(n)})`,
+    noNames: 'No names yet. Add them below, or click words in the text.',
+    mentions: (n: number) => count(n, 'mention', 'mentions'),
+    reasons: {
+      title: 'Follows a title (Mr, Ms, Dr…)',
+      context: 'From the words around it',
+      language: 'Recognised as a person by the language model',
+      known: 'A common first name',
+      capital: 'A capitalised word mid-sentence – check it',
+    } satisfies Record<NameReason, string>,
+    addedByYou: 'Added by you',
+    removeName: (name: string) => `Do not hide ${name}`,
+    addLabel: 'Add a name the tool missed',
+    addPlaceholder: 'e.g. Mo, or Hessa Saeed',
+    add: 'Add',
+    leftAsWritten: 'Left as written:',
+    hideAgain: 'hide it again',
+    sharedHeading: 'What will be shared',
+    sharedSummary: (people: number, contacts: number) =>
+      `${count(people, 'person', 'people')}${contacts > 0 ? ` and ${count(contacts, 'contact detail', 'contact details')}` : ''} replaced with codes. The codes are new each time, in random order.`,
+    nothingTitle: 'Nothing is hidden yet',
+    nothingText: 'No names or contact details are marked. Add the names in the text before you go on.',
+    backText: 'Back to the text',
+    nextLock: 'Next: lock & share',
+
+    checklistHelp: 'The key and the text unlock once every box is ticked.',
+    keyHeading: '1. Lock and save the key',
+    keyText: (never: (text: string) => ReactNode): ReactNode => (
+      <>
+        The key is what turns the codes back into names. Lock it with a passphrase and keep it in school-approved
+        storage. {never('Never give it to an AI tool.')}
+      </>
+    ),
+    lockDownload: 'Lock and download the key',
+    downloadKey: 'Download the key',
+    savedLocked: (name: string) => `✓ Saved as ${name} (locked)`,
+    textHeading: '2. Take the anonymized text',
+    textText: (batch: string) => `This is the only text to give the AI. Batch code ${batch} links it to its key.`,
+    copyText: 'Copy the text',
+    downloadTxt: 'Download .txt',
+    keyNotSavedText: 'Without the key you will not be able to unlock the names after this page is closed.',
+    promptHeading: '3. Paste these instructions into the AI with the text',
+    promptHelp: 'They ask the AI to keep the codes as they are, so its answer can be unlocked.',
+    unlockTitle: 'To unlock the text',
+    unlockText: (tab: (text: string) => ReactNode): ReactNode => (
+      <>
+        Open {tab('Re-identify / unlock')}, load the key (and its passphrase), and paste the anonymized text or the
+        AI’s answer: every code turns back into the name. A short form such as “Omar” comes back as the full name the
+        tool linked it to (“Omar Al Hashimi”). The key stays in this tab until you close or refresh it.
+      </>
+    ),
+    goUnlock: 'Go to Re-identify / unlock',
+    backNames: 'Back to the names',
+    another: 'Anonymize other text',
+  },
+
+  /** Instructions the teacher pastes into the AI along with anonymized text. */
+  aiTextPrompt: (prefixes: string[]): string =>
+    [
+      'The text below has been anonymized. People’s names' +
+        (prefixes.length > 1 ? ' and contact details' : '') +
+        ` have been replaced with codes${prefixes.length ? ` (for example ${prefixes.map((p) => `${p}-001`).join(', ')})` : ''}. The same code always means the same person.`,
+      '',
+      'Please follow these rules in your answer:',
+      '1. Whenever you refer to a person, use their code exactly as written (for example PERSON-001). Do not change, shorten or renumber the codes, and do not invent names for them.',
+      '2. Do not try to work out who the people are.',
+      '3. Keep the codes in any rewritten text, summary, list or table.',
+    ].join('\n'),
+
   reidentify: {
     eyebrow: 'Step 2 of the round trip',
     heading: 'Re-identify the AI’s results',
-    lead: 'Put the real names and IDs back into what the AI gave you. This works with spreadsheets (CSV, Excel), text and Markdown files, or text you paste in.',
+    lead: 'Put the real names and IDs back into what the AI gave you, or unlock text you anonymized. This works with spreadsheets (CSV, Excel), text and Markdown files, or text you paste in.',
     help: (watch: (text: string) => ReactNode, guide: (text: string) => ReactNode): ReactNode => (
       <>
         First time? {watch('Watch the tutorial')} or see “How to put the names back” in the {guide('user guide')}.
@@ -395,7 +511,7 @@ export const en = {
     unlock: 'Unlock key',
     cancel: 'Cancel',
     keyDropTitle: 'Drop your key file here, or click to choose it',
-    keyDropHint: 'The PRIVATE-reidentification-key file you saved when you anonymized the data.',
+    keyDropHint: 'The PRIVATE-reidentification-key file you saved when you anonymized the data or text.',
     keyErrors: {
       passphraseRequired: 'This key file is locked. Enter the passphrase that was used when it was created.',
       wrongPassphrase: 'That passphrase did not unlock the key file. Check it and try again.',
@@ -411,7 +527,7 @@ export const en = {
     resultsDropTitle: 'Drop the AI’s output file here',
     resultsDropHint: 'CSV, TSV, Excel (.xlsx), .txt, .md, .json or .html',
     pasteLabel: 'AI response',
-    pastePlaceholder: 'Paste the AI’s answer here, e.g. “STU-004 and STU-017 need support with fractions…”',
+    pastePlaceholder: 'Paste the AI’s answer or your anonymized text here, e.g. “STU-004 and PERSON-017 need support with fractions…”',
     putNamesBack: 'Put the names back',
     resultHeading: '3. Result',
     downloadFile: (name: string) => `Download ${name}`,
@@ -577,6 +693,7 @@ export const en = {
       'Hidden rows and columns are included like any others, so unhide and check them. Excel formatting, formulas, cell comments and other sheets are not carried into the download.',
       'The AI can change or invent codes. Results attached to codes that are not in the key are flagged.',
       'Old .xls files must be saved as .xlsx first.',
+      'On the Text screen, names are found by an English language model and rules, not by knowing who is in the class. Names in lower case or Arabic script, nicknames and unusual spellings can be missed, so check the text before you share it.',
     ],
   },
 

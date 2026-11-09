@@ -44,7 +44,7 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function shuffle<T>(items: T[]): T[] {
+export function shuffle<T>(items: T[]): T[] {
   const a = [...items];
   const random = new Uint32Array(a.length);
   crypto.getRandomValues(random);
@@ -55,7 +55,7 @@ function shuffle<T>(items: T[]): T[] {
   return a;
 }
 
-function batchCode(): string {
+export function batchCode(): string {
   // No 0/O/1/I so the code is easy to read back.
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const random = crypto.getRandomValues(new Uint8Array(5));

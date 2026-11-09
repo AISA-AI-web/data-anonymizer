@@ -43,7 +43,11 @@ export type ChecklistId =
   | 'policy'
   | 'key'
   | 'oversight'
-  | 'retention';
+  | 'retention'
+  | 'text-names'
+  | 'text-details'
+  | 'text-sensitive'
+  | 'text-retention';
 
 export interface ChecklistItem {
   id: ChecklistId;
@@ -61,6 +65,18 @@ export const ANONYMIZE_CHECKLIST: ChecklistItem[] = [
   { id: 'key', group: 'afterwards' },
   { id: 'oversight', group: 'afterwards' },
   { id: 'retention', group: 'afterwards' },
+];
+
+/** The same promises for a piece of writing pasted on the Text screen. */
+export const TEXT_CHECKLIST: ChecklistItem[] = [
+  { id: 'text-names', group: 'data' },
+  { id: 'text-details', group: 'data' },
+  { id: 'text-sensitive', group: 'data' },
+  { id: 'approved-tool', group: 'tool' },
+  { id: 'policy', group: 'tool' },
+  { id: 'key', group: 'afterwards' },
+  { id: 'oversight', group: 'afterwards' },
+  { id: 'text-retention', group: 'afterwards' },
 ];
 
 /** Extra links configured per deployment, e.g. to a staff-only copy of an internal policy. */
